@@ -17,18 +17,9 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <config.h>
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
+#ifndef spiram_h
+#define spiram_h
 
-#include "spiram.h"
+#define main embedded_main
 
-
-int main(int argc, char **argv)
-{
-    return 0;
-}
+#endif
