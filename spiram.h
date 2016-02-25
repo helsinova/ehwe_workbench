@@ -20,6 +20,8 @@
 #ifndef spiram_h
 #define spiram_h
 
+#ifdef EHWE
 #define main embedded_main
+#endif
 
 #endif
