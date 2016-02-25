@@ -17,18 +17,53 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <config.h>
+#include <ctype.h>
 #include <stdio.h>
-#include <sys/time.h>
-#include <sys/stat.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 
 #include "spiram.h"
 
+#define DEFLT_REPETITIONS 100
+#define DEFLT_PATTERN     "Donald Duck .."
+
+void write_spiram(char *pattern, int times)
+{
+}
 
 int main(int argc, char **argv)
 {
+    int repetitions = DEFLT_REPETITIONS;
+    char *pattern = DEFLT_PATTERN;
+#ifdef STDLIB_TARGET
+    int c;
+
+    opterr = 0;
+    while ((c = getopt(argc, argv, "x:")) != -1)
+        switch (c) {
+            case 'x':
+                repetitions = atoi(optarg);
+                break;
+            case '?':
+                if (optopt == 'x')
+                    fprintf(stderr, "Option -%c requires an argument.\n",
+                            optopt);
+                else if (isprint(optopt))
+                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                else
+                    fprintf(stderr,
+                            "Unknown option character `\\x%x'.\n", optopt);
+                return 1;
+            default:
+                abort();
+        }
+
+    if (optind < argc)
+        pattern = argv[optind];
+
+    printf("SPI-RAM will be filled with test-pattern [%s] %d number of times\n",
+           pattern, repetitions);
+#endif
+    write_spiram(pattern, repetitions);
     return 0;
 }
