@@ -21,20 +21,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <string.h>
+#include <stm32f10x.h>
 #include "spiram.h"
 
 #define DEFLT_REPETITIONS 100
 #define DEFLT_PATTERN     "Donald Duck .."
 
-void write_spiram(char *pattern, int times)
+void write_spiram(char *pattern, int sz, int times)
 {
+    int i, j;
+
+    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET) ;
+
+    for (i = 0; i < times; i++) {
+        for (j = 0; j < sz; j++) {
+            SPI_I2S_SendData(SPI1, pattern[j]);
+        }
+    }
 }
 
 int main(int argc, char **argv)
 {
     int repetitions = DEFLT_REPETITIONS;
     char *pattern = DEFLT_PATTERN;
+    int pattsz = sizeof(DEFLT_PATTERN);
 #ifdef STDLIB_TARGET
     int c;
 
@@ -58,12 +69,14 @@ int main(int argc, char **argv)
                 abort();
         }
 
-    if (optind < argc)
+    if (optind < argc) {
         pattern = argv[optind];
+        pattsz = strlen(pattern);
+    }
 
     printf("SPI-RAM will be filled with test-pattern [%s] %d number of times\n",
            pattern, repetitions);
 #endif
-    write_spiram(pattern, repetitions);
+    write_spiram(pattern, pattsz, repetitions);
     return 0;
 }
