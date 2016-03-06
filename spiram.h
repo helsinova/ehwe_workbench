@@ -21,7 +21,7 @@
 #define spiram_h
 
 #ifdef EHWE
-#include "econfig.h"
+#include "embedded_config.h"
 #define main embedded_main
 #endif
 

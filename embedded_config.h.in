@@ -1,0 +1,7 @@
+/* embedded/config.h.in */
+#ifndef embedded_config_h
+#define embedded_config_h
+
+#cmakedefine STDLIB_TARGET
+
+#endif

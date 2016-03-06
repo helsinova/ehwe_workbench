@@ -14,8 +14,8 @@ set(LIBEMBEDDED_SOURCE
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/econfig.h.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/econfig.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/embedded_config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/embedded_config.h"
   )
 
 add_library(embedded ${LIBEMBEDDED_SOURCE})
