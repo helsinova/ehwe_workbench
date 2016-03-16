@@ -3,5 +3,6 @@
 #define embedded_config_h
 
 #cmakedefine STDLIB_TARGET
+#cmakedefine HAS_PRINTF
 
 #endif

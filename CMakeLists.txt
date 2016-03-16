@@ -7,6 +7,9 @@ include_directories("${PROJECT_SOURCE_DIR}/interfaces/include")
 option(STDLIB_TARGET
     "If real target has a working stdlib" ON)
 
+option(HAS_PRINTF
+    "If has printf and it works" ON)
+
 set(LIBEMBEDDED_SOURCE
 	spiram.c
 )
