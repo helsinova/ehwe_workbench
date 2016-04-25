@@ -1,3 +1,4 @@
+INCLUDE (CheckLibraryExists)
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}")
 
@@ -11,7 +12,8 @@ option(HAS_PRINTF
     "If has printf and it works" ON)
 
 set(LIBEMBEDDED_SOURCE
-	spiram.c
+	main.c
+	pwm_pca9685.c
 )
 
 # configure a header file to pass some of the CMake settings
@@ -22,4 +24,11 @@ configure_file (
   )
 
 add_library(embedded ${LIBEMBEDDED_SOURCE})
+
+CHECK_LIBRARY_EXISTS(m sqrt "" HAVE_LIB_MATH)
+if (HAVE_LIB_MATH)
+    target_link_libraries(embedded m)
+else (HAVE_LIB_MATH)
+    target_link_libraries(embedded)
+endif (HAVE_LIB_MATH)
 

@@ -1,16 +1,31 @@
-SPIRAM
-======
+PCA9685 - 16 channel PWM for i2c
+==================================
 
-This is a *very simple* template/sample project for EHWE. The simplicity
-is intentional, i.e. project contains only a bare minimum to function as
-intended. Purposes fullfilled:
+This is a reference workbench for `ehwe`
+([project link](https://github.com/helsinova/ehwe))
 
-* Allows EHWE to compile straight out from repo using it's pre-defined git
-  submodules.
-* Serves as a template for how to set-up an *"embedded workbench"* under
-  ``EHWE``.
+Documentation for a lab using this code:
+[`ehwe` wiki-lab](https://github.com/helsinova/ehwe/wiki/EHWE-BusPirate-lab--pca9685_pwm.md)
 
-## How to use
+**Note:** This code uses the *STM32F10x_StdPeriph_Lib (V3.5.0)* API. I.e. it
+should in *principle* be transparent to *STM32 SoC:s*.
+
+## How to build
+
+```bash
+cd ..
+cmake $(cat embedded/config.txt) \
+    -DCMAKE_BUILD_TYPE=Debug
+make
+```
+
+Hints:
+* You can omit `-DCMAKE_BUILD_TYPE=Debug` or modify to your
+  preference.
+* You *can* build in a separate BUILD directory
+
+
+## How to use this git
 
 First, git-clone ``EHWE`` somewhere. Make sure you got all submodules by
 reading it's ``README.md``.
