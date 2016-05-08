@@ -11,7 +11,7 @@ option(HAS_PRINTF
     "If has printf and it works" ON)
 
 set(LIBEMBEDDED_SOURCE
-	spiram.c
+	i2c_magnetometer.c
 )
 
 # configure a header file to pass some of the CMake settings
