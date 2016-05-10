@@ -197,15 +197,21 @@ void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
     /* Test on EV6 and clear it */
     while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) ;
 
-    I2C_AcknowledgeConfig(bus, DISABLE);
-
-    for (i = 0; i < len; i++) {
+    /* Read all but the last with auto ACK */
+    for (i = 0; i < (len - 1); i++) {
         while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
         buffer[i] = I2C_ReceiveData(bus);
     }
 
+    I2C_AcknowledgeConfig(bus, DISABLE);
     /* Close Communication */
     I2C_GenerateSTOP(bus, ENABLE);
+
+    /* Read the last one */
+    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
+    buffer[i] = I2C_ReceiveData(bus);
+
+    /* Re-enable HW auto ACK for next time */
     I2C_AcknowledgeConfig(bus, ENABLE);
 }
 
