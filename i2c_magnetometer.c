@@ -44,21 +44,177 @@
 #define IDENTIFICATION_REGISTER_B	0x0B    /* Read */
 #define IDENTIFICATION_REGISTER_C	0x0C    /* Read */
 
-#define DEFLT_X     0
-#define I2Cx SPI1	//To be used changed to I2C1 (TBD)
-					//===============================
+#define DEFLT_X     1
+
 #ifdef HAS_PRINTF
 #define PRINTF printf
 #else
 #define PRINTF(...) ((void)(0))
 #endif
 
+#ifdef NEVER_DEFINE_ORIGINAL_SNIPPET
+int eeprom_write_byte(unsigned int iAddress, char cByte, char cContinued)
+{
+
+    while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_BUSY)) ;
+
+    /* Send START condition */
+    I2C_GenerateSTART(I2Cx, ENABLE);
+
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT)) ;
+
+    /* Send Slave address for write */
+    I2C_Send7bitAddress(I2Cx, EEPROM_I2C_ADDR, I2C_Direction_Transmitter);
+
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) ;
+
+    // Sent Address MSByte
+    I2C_SendData(I2Cx, (uint8_t)((iAddress & 0xFF00) >> 8));
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
+
+    // Sent Address LSByte
+    I2C_SendData(I2Cx, (uint8_t)(iAddress & 0x00FF));
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
+
+    // Sent Data Byte
+    I2C_SendData(I2Cx, cByte);
+    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
+
+    // Close Communication
+    I2C_GenerateSTOP(I2Cx, ENABLE);
+
+}
+
+char eeprom_read_byte(unsigned int iAddress)
+{
+    char DataByte = 0;
+
+    while (I2C_GetFlagStatus(I2C_SELECTED, I2C_FLAG_BUSY)) ;
+
+    eeprom_wait_for_ready();
+
+    /* While the bus is busy */
+    while (I2C_GetFlagStatus(I2C_SELECTED, I2C_FLAG_BUSY)) ;
+
+    /* Send START condition */
+    I2C_GenerateSTART(I2C_SELECTED, ENABLE);
+
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_MODE_SELECT)) ;
+
+    /* Send RTC address for write */
+    I2C_Send7bitAddress(I2C_SELECTED, EEPROM_I2C_ADDR,
+                        I2C_Direction_Transmitter);
+
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent
+           (I2C_SELECTED, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) ;
+
+    /* Send the internal address pointer to the required register */
+    I2C_SendData(I2C_SELECTED, (uint8_t)((iAddress & 0xFF00) >> 8));
+
+    /* Test on EV8 and clear it */
+    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
+
+    /* Send the internal address pointer to the required register */
+    I2C_SendData(I2C_SELECTED, (uint8_t)(iAddress & 0x00FF));
+
+    /* Test on EV8 and clear it */
+    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
+
+    /* Repeat STRAT condition */
+    I2C_GenerateSTART(I2C_SELECTED, ENABLE);
+
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_MODE_SELECT)) ;
+
+    /* Send IC address for read */
+    I2C_Send7bitAddress(I2C_SELECTED, EEPROM_I2C_ADDR, I2C_Direction_Receiver);
+
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent
+           (I2C_SELECTED, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) ;
+
+    I2C_AcknowledgeConfig(I2C_SELECTED, DISABLE);
+
+    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
+    DataByte = I2C_ReceiveData(I2C_SELECTED);
+
+    /* Send STOP condition */
+    I2C_GenerateSTOP(I2C_SELECTED, ENABLE);
+
+    I2C_AcknowledgeConfig(I2C_SELECTED, ENABLE);
+
+    return DataByte;
+}
+#endif
+
+void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
+               int len)
+{
+    int i;
+
+    while (I2C_GetFlagStatus(bus, I2C_FLAG_BUSY)) ;
+
+    /* Send START condition */
+    I2C_GenerateSTART(bus, ENABLE);
+
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_MODE_SELECT)) ;
+
+    /* Send device address for write */
+    I2C_Send7bitAddress(bus, dev_addr, I2C_Direction_Transmitter);
+
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) ;
+
+    for (i = 0; i < len; i++) {
+        I2C_SendData(bus, buffer[i]);
+        while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
+    }
+
+    /* Close Communication */
+    I2C_GenerateSTOP(bus, ENABLE);
+}
+
+void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
+{
+    int i;
+
+    while (I2C_GetFlagStatus(bus, I2C_FLAG_BUSY)) ;
+
+    /* Send START condition */
+    I2C_GenerateSTART(bus, ENABLE);
+
+    /* Test on EV5 and clear it */
+    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_MODE_SELECT)) ;
+
+    /* Send IC address for read */
+    I2C_Send7bitAddress(bus, dev_addr, I2C_Direction_Receiver);
+
+    /* Test on EV6 and clear it */
+    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) ;
+
+    I2C_AcknowledgeConfig(bus, DISABLE);
+
+    for (i = 0; i < len; i++) {
+        while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
+        buffer[i] = I2C_ReceiveData(bus);
+    }
+
+    /* Close Communication */
+    I2C_GenerateSTOP(bus, ENABLE);
+    I2C_AcknowledgeConfig(bus, ENABLE);
+}
+
 int main(int argc, char **argv)
 {
-    int x = DEFLT_X;
+    int i, j, x = DEFLT_X;
 #ifdef STDLIB_TARGET
     int c;
-    uint8_t creg;
+    uint8_t data[6];
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1)
@@ -96,7 +252,7 @@ int main(int argc, char **argv)
     }
 #endif
 
-#ifndef ONEBYTE
+#ifdef ONEBYTE
     PRINTF("SPI-RAM_2: Read from config register\n");
     SPI_I2S_SetCS(I2Cx, 0);
     SPI_I2S_SendDataArray_ncs(I2Cx, (uint8_t[]) {
@@ -125,15 +281,31 @@ int main(int argc, char **argv)
     SPI_I2S_SetCS(I2Cx, 1);
     PRINTF("SPI-RAM_2: Config register is: 0x%02X\n", creg);
 #else
-    //Alternative interface
-    SPI_I2S_SendReceiveData(I2Cx, (uint8_t[]) {
-                            0x05}, 1, &creg, 1);
+    //Set measurement mode to 8-average, 15Hz
+    i2c_write(I2C1, 0x3C, (uint8_t[]) {
+              0x00, 0x70}, 2);
 
-    SPI_I2S_SendDataArray(I2Cx, (uint8_t[]) {
-                          0x01, 0x41}, 2);
+    //Set gain to 5
+    i2c_write(I2C1, 0x3C, (uint8_t[]) {
+              0x01, 0xa0}, 2);
 
-    SPI_I2S_SendReceiveData(I2Cx, (uint8_t[]) {
-                            0x05}, 1, &creg, 1);
+    //Set to single-measurement mode
+    i2c_write(I2C1, 0x3C, (uint8_t[]) {
+              0x02, 0x01}, 2);
+
+    for (i = 0; i < x; i++) {
+        i2c_read(I2C1, 0x3D, data, sizeof(data));
+
+        for (j = 0; j < sizeof(data); j++) {
+            PRINTF("%3d", data[j]);
+            if (j < sizeof(data))
+                PRINTF(" ");
+            else
+                PRINTF("\n");
+        }
+
+    }
+
 #endif
 
     PRINTF("I2C mag: Variable [x]: 0x%02X\n", x);
