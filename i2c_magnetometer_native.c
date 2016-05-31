@@ -30,6 +30,7 @@
 #include "i2c_magnetometer.h"
 #include <arpa/inet.h>
 #include <assert.h>
+#include <math.h>
 #include "../devices/buspirate/local.h"
 #include <devices.h>
 
@@ -109,7 +110,9 @@ void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
 
 int main(int argc, char **argv)
 {
-    int c, i, X, Y, Z, x = DEFLT_X;
+    int c, i, x = DEFLT_X;
+    int16_t X, Y, Z;
+	double vectlen;
     uint8_t data[6] = { 0 };
 
     opterr = 0;
@@ -162,8 +165,9 @@ int main(int argc, char **argv)
         X = (data[0] << 8) + data[1];
         Z = (data[2] << 8) + data[3];
         Y = (data[4] << 8) + data[5];
+		vectlen=sqrt(X*X + Y*Y + Z*Z);
 
-        PRINTF("%-6d %-6d %-6d\n", X, Y, Z);
+        PRINTF("%-6d %-6d %-6d %-.3f\n", X, Y, Z, vectlen);
 
     }
     return 0;
