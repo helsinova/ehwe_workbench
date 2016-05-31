@@ -29,8 +29,9 @@
 #include <stm32f10x.h>
 #include "i2c_magnetometer.h"
 #include <arpa/inet.h>
-#include "../devices/buspirate/local.h"
 #include <assert.h>
+#include "../devices/buspirate/local.h"
+#include <devices.h>
 
 #define HMC5883L_ADDR				0x1E
 #define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
@@ -55,8 +56,10 @@
 #define PRINTF(...) ((void)(0))
 #endif
 
-#define BUS( B ) (B->ddata)
-#define SEND_ADDR( A ) (A<<1)
+#define DDATA( B ) (B->ddata)
+#define DD( B ) (DDATA(B)->driver.i2c)
+#define DEV( B ) (DD(B)->device)
+#define WRITE_ADDR( A ) (A<<1)
 #define READ_ADDR( A ) ((A<<1) | 0x01)
 
 void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
@@ -65,20 +68,21 @@ void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
     int ack;
 
     assert(dev_addr < 0x80);
+    assert(DEV(bus)->role == I2C);
 
     /* Send START condition */
-    bpi2c_start(BUS(bus));
+    DD(bus)->start(DDATA(bus));
 
     /* Send device address for write */
-    ack = bpi2c_sendByte(BUS(bus), SEND_ADDR(dev_addr));
+    ack = DD(bus)->sendByte(DDATA(bus), WRITE_ADDR(dev_addr));
     assert(ack == 1);
 
     /* Send the rest */
-    bpi2c_sendData(BUS(bus), buffer, len);
+    DD(bus)->sendData(DDATA(bus), buffer, len);
 
     if (send_stop) {
         /* Close Communication */
-        bpi2c_stop(BUS(bus));
+        DD(bus)->stop(DDATA(bus));
     }
 }
 
@@ -87,19 +91,20 @@ void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
     int ack;
 
     assert(dev_addr < 0x80);
+    assert(DEV(bus)->role == I2C);
 
     /* Send START condition */
-    bpi2c_start(BUS(bus));
+    DD(bus)->start(DDATA(bus));
 
     /* Send IC address for read */
-    ack = bpi2c_sendByte(BUS(bus), READ_ADDR(dev_addr));
+    ack = DD(bus)->sendByte(DDATA(bus), READ_ADDR(dev_addr));
     assert(ack == 1);
 
     /* Read all but the last with auto ACK */
-    bpi2c_receiveData(BUS(bus), buffer, len);
+    DD(bus)->receiveData(DDATA(bus), buffer, len);
 
     /* Close Communication */
-    bpi2c_stop(BUS(bus));
+    DD(bus)->stop(DDATA(bus));
 }
 
 int main(int argc, char **argv)
