@@ -53,8 +53,10 @@
 
 #ifdef HAS_PRINTF
 #define PRINTF printf
+#define FFLUSH fflush
 #else
 #define PRINTF(...) ((void)(0))
+#define FFLUSH(...) ((void)(0))
 #endif
 
 #define DDATA( B ) (B->ddata)
@@ -112,7 +114,7 @@ int main(int argc, char **argv)
 {
     int c, i, x = DEFLT_X;
     int16_t X, Y, Z;
-	double vectlen;
+    double vectlen;
     uint8_t data[6] = { 0 };
 
     opterr = 0;
@@ -165,9 +167,10 @@ int main(int argc, char **argv)
         X = (data[0] << 8) + data[1];
         Z = (data[2] << 8) + data[3];
         Y = (data[4] << 8) + data[5];
-		vectlen=sqrt(X*X + Y*Y + Z*Z);
+        vectlen = sqrt(X * X + Y * Y + Z * Z);
 
         PRINTF("%-6d %-6d %-6d %-.3f\n", X, Y, Z, vectlen);
+        FFLUSH(stdout);
 
     }
     return 0;
