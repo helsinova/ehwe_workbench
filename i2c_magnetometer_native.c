@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c-magnetometer HMC5883L
+ * Test program: i2c-magnetometer HMC5883L using native API
  */
 
 #include <ctype.h>
@@ -32,6 +32,7 @@
 #include "../devices/buspirate/local.h"
 #include <assert.h>
 
+#define HMC5883L_ADDR				0x1E
 #define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
 #define CONFIGURATION_REGISTER_B	0x01    /* Read/Write */
 #define MODE_REGISTER				0x02    /* Read/Write */
@@ -61,71 +62,104 @@
 void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
                int len, int send_stop)
 {
+    int ack;
+
     assert(dev_addr < 0x80);
 
     /* Send START condition */
     bpi2c_start(BUS(bus));
 
     /* Send device address for write */
-    bpi2c_sendByte(BUS(bus), SEND_ADDR(dev_addr));
+    ack = bpi2c_sendByte(BUS(bus), SEND_ADDR(dev_addr));
+    assert(ack == 1);
 
     /* Send the rest */
     bpi2c_sendData(BUS(bus), buffer, len);
 
     if (send_stop) {
         /* Close Communication */
-        bpi2c_start(BUS(bus));
+        bpi2c_stop(BUS(bus));
     }
 }
 
 void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
 {
+    int ack;
+
     assert(dev_addr < 0x80);
 
     /* Send START condition */
     bpi2c_start(BUS(bus));
 
     /* Send IC address for read */
-    bpi2c_sendByte(BUS(bus), READ_ADDR(dev_addr));
+    ack = bpi2c_sendByte(BUS(bus), READ_ADDR(dev_addr));
+    assert(ack == 1);
 
     /* Read all but the last with auto ACK */
     bpi2c_receiveData(BUS(bus), buffer, len);
 
     /* Close Communication */
-    bpi2c_start(BUS(bus));
+    bpi2c_stop(BUS(bus));
 }
 
-#define HMC5883L_ADDR 78
 int main(int argc, char **argv)
 {
-    int i, j, x = DEFLT_X;
-    uint8_t data[6];
+    int c, i, X, Y, Z, x = DEFLT_X;
+    uint8_t data[6] = { 0 };
 
-    /* Set measurement mode to 8-average, 15Hz */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              0x00, 0x70}, 2, 1);
-
-    /* Set gain to 5 */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              0x01, 0xa0}, 2, 1);
-
-    /* Set to single-measurement mode */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              0x02, 0x01}, 2, 1);
-
-    for (i = 0; i < x; i++) {
-        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
-
-        for (j = 0; j < sizeof(data); j++) {
-            PRINTF("%3d", data[j]);
-            if (j < sizeof(data))
-                PRINTF(" ");
-            else
-                PRINTF("\n");
+    opterr = 0;
+    while ((c = getopt(argc, argv, "x:")) != -1) {
+        switch (c) {
+            case 'x':
+                x = atoi(optarg);
+                break;
+            case '?':
+                if (optopt == 'x')
+                    fprintf(stderr, "Option -%c requires an argument.\n",
+                            optopt);
+                else if (isprint(optopt))
+                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                else
+                    fprintf(stderr,
+                            "Unknown option character `\\x%x'.\n", optopt);
+                return 1;
+            default:
+                abort();
         }
     }
 
-    PRINTF("I2C mag: Variable [x]: 0x%02X\n", x);
-    return 0;
+    if (optind < argc) {
+        //somevar = argv[optind];
+    }
 
+    /* Set measurement mode to 8-average, 15Hz */
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              CONFIGURATION_REGISTER_A, 0x70}, 2, 1);
+
+    /* Set gain to 5 */
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              CONFIGURATION_REGISTER_B, 0xa0}, 2, 1);
+
+    /* Set to continuous mode */
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              MODE_REGISTER, 0x00}, 2, 1);
+
+    usleep(6000);
+
+    for (i = 0; i < x; i++) {
+        /* Point at first value register-set again */
+        i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+                  DATA_OUTPUT_X_MSB_REGISTER}, 1, 1);
+        usleep(67000);
+
+        /* Read values */
+        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
+        X = (data[0] << 8) + data[1];
+        Z = (data[2] << 8) + data[3];
+        Y = (data[4] << 8) + data[5];
+
+        PRINTF("%-6d %-6d %-6d\n", X, Y, Z);
+
+    }
+    return 0;
 }
