@@ -1,16 +1,15 @@
-SPIRAM
-======
+HMC5883L -Triple Axis Magnetometer
+==================================
 
-This is a *very simple* template/sample project for EHWE. The simplicity
-is intentional, i.e. project contains only a bare minimum to function as
-intended. Purposes fullfilled:
+This is a reference workbench for `ehwe`
 
-* Allows EHWE to compile straight out from repo using it's pre-defined git
-  submodules.
-* Serves as a template for how to set-up an *"embedded workbench"* under
-  ``EHWE``.
+Documentation for a lab using this code:
+[`ehwe`](https://github.com/helsinova/ehwe/wiki/HMC5883L-EHWE-BusPirate-lab)
 
-## How to use
+**Note:** This code uses the *STM32F10x_StdPeriph_Lib (V3.5.0)* API. I.e. it
+should in *principle* be transparent to *STM32 SoC:s*.
+
+## How to use this git
 
 First, git-clone ``EHWE`` somewhere. Make sure you got all submodules by
 reading it's ``README.md``.
