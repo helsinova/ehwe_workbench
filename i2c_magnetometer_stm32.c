@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c-magnetometer HMC5883L
+ * Test program: i2c-magnetometer HMC5883L using stm32 API
  */
 
 #include <ctype.h>
@@ -50,105 +50,6 @@
 #define PRINTF printf
 #else
 #define PRINTF(...) ((void)(0))
-#endif
-
-#ifdef NEVER_DEFINE_ORIGINAL_SNIPPET
-int eeprom_write_byte(unsigned int iAddress, char cByte, char cContinued)
-{
-
-    while (I2C_GetFlagStatus(I2Cx, I2C_FLAG_BUSY)) ;
-
-    /* Send START condition */
-    I2C_GenerateSTART(I2Cx, ENABLE);
-
-    /* Test on EV5 and clear it */
-    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT)) ;
-
-    /* Send Slave address for write */
-    I2C_Send7bitAddress(I2Cx, EEPROM_I2C_ADDR, I2C_Direction_Transmitter);
-
-    /* Test on EV6 and clear it */
-    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) ;
-
-    // Sent Address MSByte
-    I2C_SendData(I2Cx, (uint8_t)((iAddress & 0xFF00) >> 8));
-    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
-
-    // Sent Address LSByte
-    I2C_SendData(I2Cx, (uint8_t)(iAddress & 0x00FF));
-    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
-
-    // Sent Data Byte
-    I2C_SendData(I2Cx, cByte);
-    while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
-
-    // Close Communication
-    I2C_GenerateSTOP(I2Cx, ENABLE);
-
-}
-
-char eeprom_read_byte(unsigned int iAddress)
-{
-    char DataByte = 0;
-
-    while (I2C_GetFlagStatus(I2C_SELECTED, I2C_FLAG_BUSY)) ;
-
-    eeprom_wait_for_ready();
-
-    /* While the bus is busy */
-    while (I2C_GetFlagStatus(I2C_SELECTED, I2C_FLAG_BUSY)) ;
-
-    /* Send START condition */
-    I2C_GenerateSTART(I2C_SELECTED, ENABLE);
-
-    /* Test on EV5 and clear it */
-    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_MODE_SELECT)) ;
-
-    /* Send RTC address for write */
-    I2C_Send7bitAddress(I2C_SELECTED, EEPROM_I2C_ADDR,
-                        I2C_Direction_Transmitter);
-
-    /* Test on EV6 and clear it */
-    while (!I2C_CheckEvent
-           (I2C_SELECTED, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) ;
-
-    /* Send the internal address pointer to the required register */
-    I2C_SendData(I2C_SELECTED, (uint8_t)((iAddress & 0xFF00) >> 8));
-
-    /* Test on EV8 and clear it */
-    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
-
-    /* Send the internal address pointer to the required register */
-    I2C_SendData(I2C_SELECTED, (uint8_t)(iAddress & 0x00FF));
-
-    /* Test on EV8 and clear it */
-    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
-
-    /* Repeat STRAT condition */
-    I2C_GenerateSTART(I2C_SELECTED, ENABLE);
-
-    /* Test on EV5 and clear it */
-    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_MODE_SELECT)) ;
-
-    /* Send IC address for read */
-    I2C_Send7bitAddress(I2C_SELECTED, EEPROM_I2C_ADDR, I2C_Direction_Receiver);
-
-    /* Test on EV6 and clear it */
-    while (!I2C_CheckEvent
-           (I2C_SELECTED, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) ;
-
-    I2C_AcknowledgeConfig(I2C_SELECTED, DISABLE);
-
-    while (!I2C_CheckEvent(I2C_SELECTED, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
-    DataByte = I2C_ReceiveData(I2C_SELECTED);
-
-    /* Send STOP condition */
-    I2C_GenerateSTOP(I2C_SELECTED, ENABLE);
-
-    I2C_AcknowledgeConfig(I2C_SELECTED, ENABLE);
-
-    return DataByte;
-}
 #endif
 
 void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
@@ -223,7 +124,7 @@ int main(int argc, char **argv)
     uint8_t data[6];
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "x:")) != -1)
+    while ((c = getopt(argc, argv, "x:")) != -1) {
         switch (c) {
             case 'x':
                 x = atoi(optarg);
@@ -241,52 +142,13 @@ int main(int argc, char **argv)
             default:
                 abort();
         }
+    }
 
     if (optind < argc) {
         //somevar = argv[optind];
     }
 #endif
-#ifdef TEST_CS
-    {
-        int i = 0;
-        for (i = 0; i < 1000; i++) {
-            SPI_I2S_SetCS(I2Cx, 1);
-            usleep(1000);
-            SPI_I2S_SetCS(I2Cx, 0);
-            usleep(10000);
-        }
-    }
-#endif
 
-#ifdef ONEBYTE
-    PRINTF("SPI-RAM_2: Read from config register\n");
-    SPI_I2S_SetCS(I2Cx, 0);
-    SPI_I2S_SendDataArray_ncs(I2Cx, (uint8_t[]) {
-                              0x05}, 1);
-    SPI_I2S_ReceiveDataArray_ncs(I2Cx, &creg, 1);
-    SPI_I2S_SetCS(I2Cx, 1);
-    PRINTF("SPI-RAM_2: Config register is: 0x%02X\n", creg);
-
-    PRINTF("SPI-RAM_2: Write 0x41 to config register\n");
-    SPI_I2S_SetCS(I2Cx, 0);
-/*
-    SPI_I2S_SendDataArray_ncs(I2Cx, (uint8_t[]) {
-                              0x01}, 1);
-    SPI_I2S_SendDataArray_ncs(I2Cx, (uint8_t[]) {
-                              0x41}, 1);
-*/
-    SPI_I2S_SendDataArray_ncs(I2Cx, (uint8_t[]) {
-                              0x01, 0x41}, 2);
-    SPI_I2S_SetCS(I2Cx, 1);
-
-    PRINTF("SPI-RAM_2: Read from config register\n");
-    SPI_I2S_SetCS(I2Cx, 0);
-    SPI_I2S_SendDataArray_ncs(I2Cx, (uint8_t[]) {
-                              0x05}, 1);
-    SPI_I2S_ReceiveDataArray_ncs(I2Cx, &creg, 1);
-    SPI_I2S_SetCS(I2Cx, 1);
-    PRINTF("SPI-RAM_2: Config register is: 0x%02X\n", creg);
-#else
     //Set measurement mode to 8-average, 15Hz
     i2c_write(I2C1, 0x3C, (uint8_t[]) {
               0x00, 0x70}, 2);
@@ -311,8 +173,6 @@ int main(int argc, char **argv)
         }
 
     }
-
-#endif
 
     PRINTF("I2C mag: Variable [x]: 0x%02X\n", x);
 

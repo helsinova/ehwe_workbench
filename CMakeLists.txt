@@ -11,9 +11,18 @@ option(STDLIB_TARGET
 option(HAS_PRINTF
     "If has printf and it works" ON)
 
-set(LIBEMBEDDED_SOURCE
-	i2c_magnetometer_native.c
-)
+option(USE_STM32_API
+  "Build example code using stm32 API." ON)
+
+if (USE_STM32_API)
+  set(LIBEMBEDDED_SOURCE
+    i2c_magnetometer_stm32.c
+  )
+else (USE_STM32_API)
+  set(LIBEMBEDDED_SOURCE
+    i2c_magnetometer_native.c
+  )
+endif (USE_STM32_API)
 
 # configure a header file to pass some of the CMake settings
 # to the source code
