@@ -12,7 +12,7 @@ option(HAS_PRINTF
     "If has printf and it works" ON)
 
 option(USE_STM32_API
-  "Build example code using stm32 API." ON)
+	"Build example code using stm32 API." OFF)
 
 if (USE_STM32_API)
   set(LIBEMBEDDED_SOURCE

@@ -29,7 +29,9 @@
 #include <stm32f10x.h>
 #include "i2c_magnetometer.h"
 #include <arpa/inet.h>
+#include <math.h>
 
+#define HMC5883L_ADDR				0x1E
 #define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
 #define CONFIGURATION_REGISTER_B	0x01    /* Read/Write */
 #define MODE_REGISTER				0x02    /* Read/Write */
@@ -48,8 +50,10 @@
 
 #ifdef HAS_PRINTF
 #define PRINTF printf
+#define FFLUSH fflush
 #else
 #define PRINTF(...) ((void)(0))
+#define FFLUSH(...) ((void)(0))
 #endif
 
 void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
@@ -118,11 +122,12 @@ void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
 
 int main(int argc, char **argv)
 {
-    int i, j, x = DEFLT_X;
-#ifdef STDLIB_TARGET
-    int c;
-    uint8_t data[6];
+    int c, i, x = DEFLT_X;
+    int16_t X, Y, Z;
+    double vectlen;
+    uint8_t data[6] = { 0 };
 
+#ifdef STDLIB_TARGET
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
         switch (c) {
@@ -149,32 +154,36 @@ int main(int argc, char **argv)
     }
 #endif
 
-    //Set measurement mode to 8-average, 15Hz
-    i2c_write(I2C1, 0x3C, (uint8_t[]) {
-              0x00, 0x70}, 2);
+    /* Set measurement mode to 8-average, 15Hz */
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              CONFIGURATION_REGISTER_A, 0x70}, 2 );
 
-    //Set gain to 5
-    i2c_write(I2C1, 0x3C, (uint8_t[]) {
-              0x01, 0xa0}, 2);
+    /* Set gain to 5 */
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              CONFIGURATION_REGISTER_B, 0xa0}, 2 );
 
-    //Set to single-measurement mode
-    i2c_write(I2C1, 0x3C, (uint8_t[]) {
-              0x02, 0x01}, 2);
+    /* Set to continuous mode */
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              MODE_REGISTER, 0x00}, 2 );
+
+    usleep(6000);
 
     for (i = 0; i < x; i++) {
-        i2c_read(I2C1, 0x3D, data, sizeof(data));
+        /* Point at first value register-set again */
+        i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+                  DATA_OUTPUT_X_MSB_REGISTER}, 1 );
+        usleep(67000);
 
-        for (j = 0; j < sizeof(data); j++) {
-            PRINTF("%3d", data[j]);
-            if (j < sizeof(data))
-                PRINTF(" ");
-            else
-                PRINTF("\n");
-        }
+        /* Read values */
+        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
+        X = (data[0] << 8) + data[1];
+        Z = (data[2] << 8) + data[3];
+        Y = (data[4] << 8) + data[5];
+        vectlen = sqrt(X * X + Y * Y + Z * Z);
+
+        PRINTF("%-6d %-6d %-6d %-.3f\n", X, Y, Z, vectlen);
+        FFLUSH(stdout);
 
     }
-
-    PRINTF("I2C mag: Variable [x]: 0x%02X\n", x);
-
     return 0;
 }
