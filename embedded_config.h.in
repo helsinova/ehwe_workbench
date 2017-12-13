@@ -4,5 +4,7 @@
 
 #cmakedefine STDLIB_TARGET
 #cmakedefine HAS_PRINTF
+#cmakedefine WORKBENCH_TEST_CS
+#cmakedefine WORKBENCH_STATUS_CHECK
 
 #endif

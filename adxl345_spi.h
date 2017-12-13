@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2015 by Michael Ambrus                                  *
- *   ambrmi09@gmail.com                                                    *
+ *   Copyright (C) 2017 by Michael Ambrus                                  *
+ *   michael@helsinova.se                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef spiram_h
-#define spiram_h
+#ifndef adxl345_spi_h
+#define adxl345_spi_h
 
 #ifdef EHWE
 #include "embedded_config.h"

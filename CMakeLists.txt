@@ -10,7 +10,14 @@ option(STDLIB_TARGET
 option(HAS_PRINTF
     "If has printf and it works" ON)
 
-set(LIBEMBEDDED_SOURCE
+## Test/parts of the embedded program
+option(WORKBENCH_TEST_CS
+	"Toggle CS once" OFF)
+
+option(WORKBENCH_STATUS_CHECK
+	"Simple register acces of ADXL345" OFF)
+
+	set(LIBEMBEDDED_SOURCE
 	adxl345_spi.c
 )
 
