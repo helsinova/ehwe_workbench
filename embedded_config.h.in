@@ -6,5 +6,6 @@
 #cmakedefine HAS_PRINTF
 #cmakedefine WORKBENCH_TEST_CS
 #cmakedefine WORKBENCH_STATUS_CHECK
+#cmakedefine WORKBENCH_LOOP_MEASURE
 
 #endif

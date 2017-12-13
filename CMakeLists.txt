@@ -17,6 +17,9 @@ option(WORKBENCH_TEST_CS
 option(WORKBENCH_STATUS_CHECK
 	"Simple register acces of ADXL345" OFF)
 
+option(WORKBENCH_LOOP_MEASURE
+	"Sample data and output continously to printf" OFF)
+
 	set(LIBEMBEDDED_SOURCE
 	adxl345_spi.c
 )

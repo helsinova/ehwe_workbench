@@ -27,87 +27,58 @@
 
 #ifdef HAS_PRINTF
 #define PRINTF printf
+#define FFLUSH fflush
 #else
 #define PRINTF(...) ((void)(0))
+#define FFLUSH(...) ((void)(0))
 #endif
 
-void write_spiram(int address, const char *pattern, int sz, int times)
-{
-#ifdef NEVER
-    int i, j, offset = 0;
-    uint32_t naddress;
-    uint8_t cmd[4];
-
-    cmd[0] = SPIRAM_WR_CMD;
-    naddress = htonl(address);
-    cmd[1] = ((uint8_t *)(&naddress))[1];
-    cmd[2] = ((uint8_t *)(&naddress))[2];
-    cmd[3] = ((uint8_t *)(&naddress))[3];
-
-    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET) ;
-    PRINTF("SPI-RAM: Write {0x%02X,0x%02X,0x%02X,0x%02X}\n", cmd[0], cmd[1],
-           cmd[2], cmd[3]);
-
-    for (i = 0; i < times; i++) {
-        SPI_I2S_SetCS(SPI1, 0);
-        SPI_I2S_SendDataArray_ncs(SPI1, cmd, 4);
-        for (j = 0; j < sz; j++) {
-            SPI_I2S_SendData_ncs(SPI1, pattern[j]);
-        }
-        SPI_I2S_SetCS(SPI1, 1);
-        PRINTF("%08X: %s\n", address + offset, pattern);
-        offset += sz;
-    }
-#endif //NEVER
-}
-
-void read_spiram(int address, char *pattern, int sz, int times)
-{
-#ifdef NEVER
-    int i, j, offset = 0;
-    uint32_t naddress;
-    uint8_t cmd[4];
-
-    cmd[0] = SPIRAM_RD_CMD;
-    naddress = htonl(address);
-    cmd[1] = ((uint8_t *)(&naddress))[1];
-    cmd[2] = ((uint8_t *)(&naddress))[2];
-    cmd[3] = ((uint8_t *)(&naddress))[3];
-
-    while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET) ;
-
-    PRINTF("SPI-RAM: Read {0x%02X,0x%02X,0x%02X,0x%02X}\n", cmd[0], cmd[1],
-           cmd[2], cmd[3]);
-    for (i = 0; i < times; i++) {
-
-        SPI_I2S_SetCS(SPI1, 0);
-        SPI_I2S_SendDataArray_ncs(SPI1, cmd, 4);
-        for (j = 0; j < sz; j++) {
-            pattern[j] = SPI_I2S_ReceiveData_ncs(SPI1);
-        }
-        SPI_I2S_SetCS(SPI1, 1);
-        PRINTF("%08X: %s\n", address + offset, pattern);
-        offset += sz;
-    }
-#endif //NEVER
-}
+/* ADXL345 register map */
+#define  THRESH_TAP      0x1D
+#define  OFSX            0x1E
+#define  OFSY            0x1F
+#define  OFSZ            0x20
+#define  DUR             0x21
+#define  Latent          0x22
+#define  Window          0x23
+#define  THRESH_ACT      0x24
+#define  THRESH_INACT    0x25
+#define  TIME_INACT      0x26
+#define  ACT_INACT_CTL   0x27
+#define  THRESH_FF       0x28
+#define  TIME_FF         0x29
+#define  TAP_AXES        0x2A
+#define  ACT_TAP_STATUS  0x2B
+#define  BW_RATE         0x2C
+#define  POWER_CTL       0x2D
+#define  INT_ENABLE      0x2E
+#define  INT_MAP         0x2F
+#define  INT_SOURCE      0x30
+#define  DATA_FORMAT     0x31
+#define  DATAX0          0x32
+#define  DATAX1          0x33
+#define  DATAY0          0x34
+#define  DATAY1          0x35
+#define  DATAZ0          0x36
+#define  DATAZ1          0x37
+#define  FIFO_CTL        0x38
+#define  FIFO_STATUS     0x39
 
 int main(int argc, char **argv)
 {
-#ifdef STDLIB_TARGET
     int c;
+#ifdef WORKBENCH_LOOP_MEASURE
+    int repetitions;
+#endif
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:a:")) != -1)
         switch (c) {
-#ifdef NEVER
+#ifdef WORKBENCH_LOOP_MEASURE
             case 'x':
                 repetitions = atoi(optarg);
                 break;
-            case 'a':
-                startaddress = atoi(optarg);
-                break;
-#endif //NEVER
+#endif
             case '?':
                 if (optopt == 'x')
                     fprintf(stderr, "Option -%c requires an argument.\n",
@@ -128,8 +99,7 @@ int main(int argc, char **argv)
         pattsz = strlen(pattern);
     }
 #endif //NEVER
-#endif
-	
+
     while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET) ;
 
 	/* Various tests below. Enable using cmake */
@@ -158,16 +128,72 @@ int main(int argc, char **argv)
 								0x80}, 1, &creg, 1);
 		PRINTF("SPI-ADXL345: Config register (0x80) is: 0x%02X\n", creg);
 
-		/*
-		PRINTF("SPI-ADXL345: Write 0x41 to config register\n");
-		SPI_I2S_SendDataArray(SPI1, (uint8_t[]) {
-							  0x01, 0x41}, 2);
+	}
+#endif
 
-		PRINTF("SPI-ADXL345: Read from config register\n");
-		SPI_I2S_SendReceiveData(SPI1, (uint8_t[]) {
-								0x05}, 1, &creg, 1);
-		PRINTF("SPI-ADXL345: Config register is: 0x%02X\n", creg);
-		*/
+#ifdef WORKBENCH_LOOP_MEASURE
+	{
+		uint8_t xdata[2];
+		uint8_t ydata[2];
+		uint8_t zdata[2];
+		uint16_t xraw;
+		uint16_t yraw;
+		uint16_t zraw;
+		int16_t X;
+		int16_t Y;
+		int16_t Z;
+		//double vectlen;
+		int loop;
+
+		fprintf(stderr, "SPI-ADXL345: Loop readings test\n");
+
+		/* Tell chip to leave idle mode */
+		SPI_I2S_SendDataArray(SPI1, (uint8_t[]) {
+								POWER_CTL, 0x08}, 2);
+
+		for (loop=0; loop<repetitions; loop++) {
+			SPI_I2S_SendReceiveData(SPI1, (uint8_t[]) {
+								0x80 | 0x40 | DATAX0}, 1, xdata, 2);
+			SPI_I2S_SendReceiveData(SPI1, (uint8_t[]) {
+								0x80 | 0x40 | DATAY0}, 1, ydata, 2);
+			SPI_I2S_SendReceiveData(SPI1, (uint8_t[]) {
+								0x80 | 0x40 | DATAZ0}, 1, zdata, 2);
+
+			/*
+			printf("%3d %3d ", 	xdata[0], xdata[1]);
+			printf("%3d %3d ", 	ydata[0], ydata[1]);
+			printf("%3d %3d -- ",	zdata[0], zdata[1]);
+			*/
+
+			xraw = (((uint16_t)xdata[1]) << 8) | xdata[0];
+			yraw = (((uint16_t)ydata[1]) << 8) | ydata[0];
+			zraw = (((uint16_t)zdata[1]) << 8) | zdata[0];
+
+			xraw = xdata[1];
+			xraw <<= 8;
+			xraw |= xdata[0];
+
+			yraw = ydata[1];
+			yraw <<= 8;
+			yraw |= ydata[0];
+
+			zraw = zdata[1];
+			zraw <<= 8;
+			zraw |= zdata[0];
+
+			/*
+			printf("%6d %6d %6d -- ", xraw, yraw, zraw);
+			*/
+
+			X = xraw;
+			Y = yraw;
+			Z = zraw;
+
+			//vectlen = sqrt(X * X + Y * Y + Z * Z);
+			//PRINTF("%-6d %-6d %-6d %-.3f\n", X, Y, Z, vectlen);
+			PRINTF("%-6d %-6d %-6d \n", X, Y, Z);
+			FFLUSH(stdout);
+		}
 	}
 #endif
 
