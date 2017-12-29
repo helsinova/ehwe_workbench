@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2015 by Michael Ambrus                                  *
- *   ambrmi09@gmail.com                                                    *
+ *   Copyright (C) 2017 by Michael Ambrus                                  *
+ *   michael@helsinova.se                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c-magnetometer HMC5883L using stm32 API
+ * pwm_pca9685 user functions library
  */
 
 #include <ctype.h>
@@ -26,27 +26,109 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <stm32f10x.h>
-#include "i2c_magnetometer.h"
-#include <arpa/inet.h>
 #include <math.h>
+#include <ehwe.h>
+#include <stm32f10x.h>
+#include "pwm_pca9685.h"
 
-#define HMC5883L_ADDR				0x1E
-#define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
-#define CONFIGURATION_REGISTER_B	0x01    /* Read/Write */
-#define MODE_REGISTER				0x02    /* Read/Write */
-#define DATA_OUTPUT_X_MSB_REGISTER	0x03    /* Read */
-#define DATA_OUTPUT_X_LSB_REGISTER	0x04    /* Read */
-#define DATA_OUTPUT_Z_MSB_REGISTER	0x05    /* Read */
-#define DATA_OUTPUT_Z_LSB_REGISTER	0x06    /* Read */
-#define DATA_OUTPUT_Y_MSB_REGISTER	0x07    /* Read */
-#define DATA_OUTPUT_Y_LSB_REGISTER	0x08    /* Read */
-#define STATUS_REGISTER				0x09    /* Read */
-#define IDENTIFICATION_REGISTER_A	0x0A    /* Read */
-#define IDENTIFICATION_REGISTER_B	0x0B    /* Read */
-#define IDENTIFICATION_REGISTER_C	0x0C    /* Read */
+/* 7-bit r/w device address */
+#define PCA9685_ADDR                0x40
 
-#define DEFLT_X     1
+/* Registers */
+#define MODE1                       0x00
+#define MODE2                       0x01
+#define SUBADR1                     0x02
+#define SUBADR2                     0x03
+#define SUBADR3                     0x04
+#define ALLCALLADR                  0x05
+
+#define PWM0_ON_L                   0x06
+#define PWM0_ON_H                   0x07
+#define PWM0_OFF_L                  0x08
+#define PWM0_OFF_H                  0x09
+
+#define PWM1_ON_L                   0x0A
+#define PWM1_ON_H                   0x0B
+#define PWM1_OFF_L                  0x0C
+#define PWM1_OFF_H                  0x0D
+
+#define PWM2_ON_L                   0x0E
+#define PWM2_ON_H                   0x0F
+#define PWM2_OFF_L                  0x10
+#define PWM2_OFF_H                  0x11
+
+#define PWM3_ON_L                   0x12
+#define PWM3_ON_H                   0x13
+#define PWM3_OFF_L                  0x14
+#define PWM3_OFF_H                  0x15
+
+#define PWM4_ON_L                   0x16
+#define PWM4_ON_H                   0x17
+#define PWM4_OFF_L                  0x18
+#define PWM4_OFF_H                  0x19
+
+#define PWM5_ON_L                   0x1A
+#define PWM5_ON_H                   0x1B
+#define PWM5_OFF_L                  0x1C
+#define PWM5_OFF_H                  0x1D
+
+#define PWM6_ON_L                   0x1E
+#define PWM6_ON_H                   0x1F
+#define PWM6_OFF_L                  0x20
+#define PWM6_OFF_H                  0x21
+
+#define PWM7_ON_L                   0x22
+#define PWM7_ON_H                   0x23
+#define PWM7_OFF_L                  0x24
+#define PWM7_OFF_H                  0x25
+
+#define PWM8_ON_L                   0x26
+#define PWM8_ON_H                   0x27
+#define PWM8_OFF_L                  0x28
+#define PWM8_OFF_H                  0x29
+
+#define PWM9_ON_L                   0x2A
+#define PWM9_ON_H                   0x2B
+#define PWM9_OFF_L                  0x2C
+#define PWM9_OFF_H                  0x2D
+
+#define PWM10_ON_L                  0x2E
+#define PWM10_ON_H                  0x2F
+#define PWM10_OFF_L                 0x30
+#define PWM10_OFF_H                 0x31
+
+#define PWM11_ON_L                  0x32
+#define PWM11_ON_H                  0x33
+#define PWM11_OFF_L                 0x34
+#define PWM11_OFF_H                 0x35
+
+#define PWM12_ON_L                  0x36
+#define PWM12_ON_H                  0x37
+#define PWM12_OFF_L                 0x38
+#define PWM12_OFF_H                 0x39
+
+#define PWM13_ON_L                  0x3A
+#define PWM13_ON_H                  0x3B
+#define PWM13_OFF_L                 0x3C
+#define PWM13_OFF_H                 0x3D
+
+#define PWM14_ON_L                  0x3E
+#define PWM14_ON_H                  0x3F
+#define PWM14_OFF_L                 0x40
+#define PWM14_OFF_H                 0x41
+
+#define PWM15_ON_L                  0x42
+#define PWM15_ON_H                  0x43
+#define PWM15_OFF_L                 0x44
+#define PWM15_OFF_H                 0x45
+
+#define ALL_PWM_ON_L                0xFA
+#define ALL_PWM_ON_H                0xFB
+#define ALL_PWM_OFF_L               0xFC
+#define ALL_PWM_OFF_H               0xFD
+
+#define PRE_SCALE                   0xFE
+#define TEST_MODE                   0xFF
 
 #ifdef HAS_PRINTF
 #define PRINTF printf
@@ -56,134 +138,34 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
-void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
-               int len)
+static I2C_TypeDef *i2c_ID;
+
+void pwm_pca9685_swreset()
 {
-    int i;
-
-    while (I2C_GetFlagStatus(bus, I2C_FLAG_BUSY)) ;
-
-    /* Send START condition */
-    I2C_GenerateSTART(bus, ENABLE);
-
-    /* Test on EV5 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_MODE_SELECT)) ;
-
-    /* Send device address for write */
-    I2C_Send7bitAddress(bus, dev_addr, I2C_Direction_Transmitter);
-
-    /* Test on EV6 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) ;
-
-    for (i = 0; i < len; i++) {
-        I2C_SendData(bus, buffer[i]);
-        while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
-    }
-
-    /* Close Communication */
-    I2C_GenerateSTOP(bus, ENABLE);
+    i2c_write(i2c_ID, 0x00, (uint8_t[]) {
+              0x06}, 1, 1);
 }
 
-void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
+void pwm_pca9685_init(I2C_TypeDef * busID)
 {
-    int i;
+    /* bus-id for this instance. TODO: refine me (multiple interfaces) */
+    i2c_ID = busID;
 
-    while (I2C_GetFlagStatus(bus, I2C_FLAG_BUSY)) ;
+    pwm_pca9685_swreset();
 
-    /* Send START condition */
-    I2C_GenerateSTART(bus, ENABLE);
+    /* Clear SLEEP-bit */
+    i2c_write(i2c_ID, PCA9685_ADDR, (uint8_t[]) {
+              MODE1, 0x01}, 2, 1);
+    usleep(500);
 
-    /* Test on EV5 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_MODE_SELECT)) ;
+    /* Set AI */
+    i2c_write(i2c_ID, PCA9685_ADDR, (uint8_t[]) {
+              MODE1, 0x21}, 2, 1);
 
-    /* Send IC address for read */
-    I2C_Send7bitAddress(bus, dev_addr, I2C_Direction_Receiver);
+    /* Set a test output */
+    i2c_write(i2c_ID, PCA9685_ADDR, (uint8_t[]) {
+              PWM0_ON_L,
+              0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
+              0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
 
-    /* Test on EV6 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) ;
-
-    /* Read all but the last with auto ACK */
-    for (i = 0; i < (len - 1); i++) {
-        while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
-        buffer[i] = I2C_ReceiveData(bus);
-    }
-
-    I2C_AcknowledgeConfig(bus, DISABLE);
-    /* Close Communication */
-    I2C_GenerateSTOP(bus, ENABLE);
-
-    /* Read the last one */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
-    buffer[i] = I2C_ReceiveData(bus);
-
-    /* Re-enable HW auto ACK for next time */
-    I2C_AcknowledgeConfig(bus, ENABLE);
-}
-
-int main(int argc, char **argv)
-{
-    int c, i, x = DEFLT_X;
-    int16_t X, Y, Z;
-    double vectlen;
-    uint8_t data[6] = { 0 };
-
-#ifdef STDLIB_TARGET
-    opterr = 0;
-    while ((c = getopt(argc, argv, "x:")) != -1) {
-        switch (c) {
-            case 'x':
-                x = atoi(optarg);
-                break;
-            case '?':
-                if (optopt == 'x')
-                    fprintf(stderr, "Option -%c requires an argument.\n",
-                            optopt);
-                else if (isprint(optopt))
-                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-                else
-                    fprintf(stderr,
-                            "Unknown option character `\\x%x'.\n", optopt);
-                return 1;
-            default:
-                abort();
-        }
-    }
-
-    if (optind < argc) {
-        //somevar = argv[optind];
-    }
-#endif
-
-    /* Set measurement mode to 8-average, 15Hz */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              CONFIGURATION_REGISTER_A, 0x70}, 2 );
-
-    /* Set gain to 5 */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              CONFIGURATION_REGISTER_B, 0xa0}, 2 );
-
-    /* Set to continuous mode */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              MODE_REGISTER, 0x00}, 2 );
-
-    usleep(6000);
-
-    for (i = 0; i < x; i++) {
-        /* Point at first value register-set again */
-        i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-                  DATA_OUTPUT_X_MSB_REGISTER}, 1 );
-        usleep(67000);
-
-        /* Read values */
-        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
-        X = (data[0] << 8) + data[1];
-        Z = (data[2] << 8) + data[3];
-        Y = (data[4] << 8) + data[5];
-        vectlen = sqrt(X * X + Y * Y + Z * Z);
-
-        PRINTF("%-6d %-6d %-6d %-.3f\n", X, Y, Z, vectlen);
-        FFLUSH(stdout);
-
-    }
-    return 0;
 }

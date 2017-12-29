@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2016 by Michael Ambrus                                  *
- *   ambrmi09@gmail.com                                                    *
+ *   Copyright (C) 2017 by Michael Ambrus                                  *
+ *   michael@helsinova.se                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c-magnetometer HMC5883L using native API
+ * Main program - pwm
  */
 
 #include <ctype.h>
@@ -26,30 +26,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <stm32f10x.h>
-#include "i2c_magnetometer.h"
-#include <arpa/inet.h>
-#include <assert.h>
 #include <math.h>
-#include "../devices/buspirate/local.h"
+#include <assert.h>
+
+#include <stm32f10x.h>
+#include <pwm_pca9685.h>
+#include <math.h>
 #include <devices.h>
-
-#define HMC5883L_ADDR				0x1E
-#define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
-#define CONFIGURATION_REGISTER_B	0x01    /* Read/Write */
-#define MODE_REGISTER				0x02    /* Read/Write */
-#define DATA_OUTPUT_X_MSB_REGISTER	0x03    /* Read */
-#define DATA_OUTPUT_X_LSB_REGISTER	0x04    /* Read */
-#define DATA_OUTPUT_Z_MSB_REGISTER	0x05    /* Read */
-#define DATA_OUTPUT_Z_LSB_REGISTER	0x06    /* Read */
-#define DATA_OUTPUT_Y_MSB_REGISTER	0x07    /* Read */
-#define DATA_OUTPUT_Y_LSB_REGISTER	0x08    /* Read */
-#define STATUS_REGISTER				0x09    /* Read */
-#define IDENTIFICATION_REGISTER_A	0x0A    /* Read */
-#define IDENTIFICATION_REGISTER_B	0x0B    /* Read */
-#define IDENTIFICATION_REGISTER_C	0x0C    /* Read */
-
-#define DEFLT_X     1
+#include <interfaces.h>
 
 #ifdef HAS_PRINTF
 #define PRINTF printf
@@ -59,63 +43,9 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
-#define DDATA( B ) (B->ddata)
-#define DD( B ) (DDATA(B)->driver.i2c)
-#define DEV( B ) (DD(B)->device)
-#define WRITE_ADDR( A ) (A<<1)
-#define READ_ADDR( A ) ((A<<1) | 0x01)
-
-void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
-               int len, int send_stop)
-{
-    int ack;
-
-    assert(dev_addr < 0x80);
-    assert(DEV(bus)->role == I2C);
-
-    /* Send START condition */
-    DD(bus)->start(DDATA(bus));
-
-    /* Send device address for write */
-    ack = DD(bus)->sendByte(DDATA(bus), WRITE_ADDR(dev_addr));
-    assert(ack == 1);
-
-    /* Send the rest */
-    DD(bus)->sendData(DDATA(bus), buffer, len);
-
-    if (send_stop) {
-        /* Close Communication */
-        DD(bus)->stop(DDATA(bus));
-    }
-}
-
-void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
-{
-    int ack;
-
-    assert(dev_addr < 0x80);
-    assert(DEV(bus)->role == I2C);
-
-    /* Send START condition */
-    DD(bus)->start(DDATA(bus));
-
-    /* Send IC address for read */
-    ack = DD(bus)->sendByte(DDATA(bus), READ_ADDR(dev_addr));
-    assert(ack == 1);
-
-    /* Read all but the last with auto ACK */
-    DD(bus)->receiveData(DDATA(bus), buffer, len);
-
-    /* Close Communication */
-    DD(bus)->stop(DDATA(bus));
-}
-
 int main(int argc, char **argv)
 {
-    int c, i, x = DEFLT_X;
-    int16_t X, Y, Z;
-    double vectlen;
-    uint8_t data[6] = { 0 };
+    int c, x = 0;
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
@@ -142,36 +72,7 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
-    /* Set measurement mode to 8-average, 15Hz */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              CONFIGURATION_REGISTER_A, 0x70}, 2, 1);
+    pwm_pca9685_init(I2C1);
 
-    /* Set gain to 5 */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              CONFIGURATION_REGISTER_B, 0xa0}, 2, 1);
-
-    /* Set to continuous mode */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              MODE_REGISTER, 0x00}, 2, 1);
-
-    usleep(6000);
-
-    for (i = 0; i < x; i++) {
-        /* Point at first value register-set again */
-        i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-                  DATA_OUTPUT_X_MSB_REGISTER}, 1, 1);
-        usleep(67000);
-
-        /* Read values */
-        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
-        X = (data[0] << 8) + data[1];
-        Z = (data[2] << 8) + data[3];
-        Y = (data[4] << 8) + data[5];
-        vectlen = sqrt(X * X + Y * Y + Z * Z);
-
-        PRINTF("%-6d %-6d %-6d %-.3f\n", X, Y, Z, vectlen);
-        FFLUSH(stdout);
-
-    }
     return 0;
 }
