@@ -46,6 +46,7 @@
 int main(int argc, char **argv)
 {
     int c, x = 0;
+    pwm_hndl pwm;
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
@@ -72,7 +73,13 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
-    pwm_pca9685_init(I2C1);
+    pwm_pca9685_all_swreset(I2C1);
+    pwm = pwm_pca9685_create(I2C1);
+
+    pwm_pca9685_init(pwm);
+    pwm_pca9685_test(pwm);
+
+    pwm_pca9685_destruct(pwm);
 
     return 0;
 }

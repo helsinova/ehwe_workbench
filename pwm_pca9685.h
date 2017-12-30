@@ -26,8 +26,10 @@
  * API */
 typedef struct pwm_instance *pwm_hndl;
 
-pwm_hndl pwm_pca9685_init(I2C_TypeDef * busID);
-void pwm_pca9685_swreset(pwm_hndl);
+pwm_hndl pwm_pca9685_create(I2C_TypeDef * bus);
+void pwm_pca9685_destruct(pwm_hndl);
+void pwm_pca9685_init(pwm_hndl);
+void pwm_pca9685_all_swreset(I2C_TypeDef * bus);
 
 #ifdef EHWE
 #include "embedded_config.h"

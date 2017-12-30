@@ -131,33 +131,43 @@
 #define TEST_MODE                   0xFF
 
 struct pwm_instance {
-    I2C_TypeDef *bus;
-    uint8_t addr;
+    I2C_TypeDef *bus;           /* HW-bus: I2C0-I2Cn */
+    uint8_t addr;               /* 7-bit write address - read-address implicit */
 };
 
-/* Invokes a SW reset-all. 
+/* Invokes a SW reset-all.
    Note: this function resets ALL pca9685 devices attached to a certain
    i2c-bus.
  */
-void pwm_pca9685_swreset(pwm_hndl pwm)
+void pwm_pca9685_all_swreset(I2C_TypeDef * bus)
 {
-    i2c_write(pwm->bus, 0x00, (uint8_t[]) {
+    i2c_write(bus, 0x00, (uint8_t[]) {
               0x06}, 1, 1);
 }
 
-/* Creates a pwm-instance, initializes device and returns handle to it.
- * Whence done with the pwm-instance, the handle can be freed.*/
-pwm_hndl pwm_pca9685_init(I2C_TypeDef * busID)
+/* Creates a pwm-instance, and returns handle to it. */
+pwm_hndl pwm_pca9685_create(I2C_TypeDef * bus)
 {
     struct pwm_instance *pwm;
 
     pwm = malloc(sizeof(struct pwm_instance));
 
     /* bus-id for this instance. */
-    pwm->bus = busID;
+    pwm->bus = bus;
+    /* Only default all-call address for now (TBD) */
     pwm->addr = DFLT_PCA9685_ADDR;
 
-    pwm_pca9685_swreset(pwm);
+    return pwm;
+}
+
+void pwm_pca9685_destruct(pwm_hndl pwm)
+{
+    free(pwm);
+}
+
+/* Initializes device and synchronizes driver with pca9685 device */
+void pwm_pca9685_init(pwm_hndl pwm)
+{
 
     /* Clear SLEEP-bit */
     i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
@@ -167,13 +177,13 @@ pwm_hndl pwm_pca9685_init(I2C_TypeDef * busID)
     /* Set AI */
     i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
               MODE1, 0x21}, 2, 1);
+}
 
-    /* Set a test output */
+/* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
+void pwm_pca9685_test(pwm_hndl pwm)
+{
     i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
               PWM0_ON_L,
               0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
-
-    return pwm;
-
 }
