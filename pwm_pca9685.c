@@ -136,7 +136,8 @@ struct pwm_instance {
     uint8_t addr;               /* 7-bit write address - read-address implicit */
 };
 
-/* Register bit-field structs */
+/* Register bit-field struct:s */
+#if BYTES_BIG_ENDIAN
 typedef union {
     struct {
         uint8_t RESTART:1;
@@ -147,9 +148,24 @@ typedef union {
         uint8_t SUB2:1;
         uint8_t SUB3:1;
         uint8_t ALLCALL:1;
-    } __attribute__ ((packed, scalar_storage_order("big-endian")));
+    } __attribute__ ((packed));
     uint8_t raw;
 } reg_mode1_t;
+#else
+typedef union {
+    struct {
+        uint8_t ALLCALL:1;
+        uint8_t SUB3:1;
+        uint8_t SUB2:1;
+        uint8_t SUB1:1;
+        uint8_t SLEEP:1;
+        uint8_t AI:1;
+        uint8_t EXTCLK:1;
+        uint8_t RESTART:1;
+    } __attribute__ ((packed));
+    uint8_t raw;
+} reg_mode1_t;
+#endif
 
 /* Invokes a SW reset-all.
    Note: this function resets ALL pca9685 devices attached to a certain
