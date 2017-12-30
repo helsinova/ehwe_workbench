@@ -31,8 +31,8 @@
 #include <stm32f10x.h>
 #include "pwm_pca9685.h"
 
-/* 7-bit r/w device address */
-#define PCA9685_ADDR                0x40
+/* 7-bit W/r device default address */
+#define DFLT_PCA9685_ADDR           0x40
 
 /* Registers */
 #define MODE1                       0x00
@@ -130,42 +130,50 @@
 #define PRE_SCALE                   0xFE
 #define TEST_MODE                   0xFF
 
-#ifdef HAS_PRINTF
-#define PRINTF printf
-#define FFLUSH fflush
-#else
-#define PRINTF(...) ((void)(0))
-#define FFLUSH(...) ((void)(0))
-#endif
+struct pwm_instance {
+    I2C_TypeDef *bus;
+    uint8_t addr;
+};
 
-static I2C_TypeDef *i2c_ID;
-
-void pwm_pca9685_swreset()
+/* Invokes a SW reset-all. 
+   Note: this function resets ALL pca9685 devices attached to a certain
+   i2c-bus.
+ */
+void pwm_pca9685_swreset(pwm_hndl pwm)
 {
-    i2c_write(i2c_ID, 0x00, (uint8_t[]) {
+    i2c_write(pwm->bus, 0x00, (uint8_t[]) {
               0x06}, 1, 1);
 }
 
-void pwm_pca9685_init(I2C_TypeDef * busID)
+/* Creates a pwm-instance, initializes device and returns handle to it.
+ * Whence done with the pwm-instance, the handle can be freed.*/
+pwm_hndl pwm_pca9685_init(I2C_TypeDef * busID)
 {
-    /* bus-id for this instance. TODO: refine me (multiple interfaces) */
-    i2c_ID = busID;
+    struct pwm_instance *pwm;
 
-    pwm_pca9685_swreset();
+    pwm = malloc(sizeof(struct pwm_instance));
+
+    /* bus-id for this instance. */
+    pwm->bus = busID;
+    pwm->addr = DFLT_PCA9685_ADDR;
+
+    pwm_pca9685_swreset(pwm);
 
     /* Clear SLEEP-bit */
-    i2c_write(i2c_ID, PCA9685_ADDR, (uint8_t[]) {
+    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
               MODE1, 0x01}, 2, 1);
     usleep(500);
 
     /* Set AI */
-    i2c_write(i2c_ID, PCA9685_ADDR, (uint8_t[]) {
+    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
               MODE1, 0x21}, 2, 1);
 
     /* Set a test output */
-    i2c_write(i2c_ID, PCA9685_ADDR, (uint8_t[]) {
+    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
               PWM0_ON_L,
               0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
+
+    return pwm;
 
 }

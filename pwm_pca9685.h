@@ -21,8 +21,13 @@
 #define pwm_pca9685_h
 
 #include <stm32f10x.h>
-void pwm_pca9685_init(I2C_TypeDef * busID);
-void pwm_pca9685_swreset();
+
+/* Forward declaration of instance-type hides details and enforces use of
+ * API */
+typedef struct pwm_instance *pwm_hndl;
+
+pwm_hndl pwm_pca9685_init(I2C_TypeDef * busID);
+void pwm_pca9685_swreset(pwm_hndl);
 
 #ifdef EHWE
 #include "embedded_config.h"
