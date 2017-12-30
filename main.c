@@ -45,8 +45,9 @@
 
 int main(int argc, char **argv)
 {
-    int c, x = 0;
+    int i, c, x = 0;
     pwm_hndl pwm;
+    struct pwm_val pwm_val;
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
@@ -78,6 +79,16 @@ int main(int argc, char **argv)
 
     pwm_pca9685_init(pwm);
     pwm_pca9685_test(pwm);
+
+    pwm_val.on_cntr = 0x0500;
+    pwm_val.off_cntr = 0x0550;
+    pwm_pca9685_set(pwm, 5, pwm_val);
+
+    for (i = 0; i < 6; i++) {
+        pwm_val = pwm_pca9685_get(pwm, i);
+        printf("pwm[%d]: 0x%03X 0x%03X\n", i, pwm_val.on_cntr,
+               pwm_val.off_cntr);
+    }
 
     pwm_pca9685_destruct(pwm);
 

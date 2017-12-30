@@ -137,6 +137,31 @@ struct pwm_instance {
     struct registers_t *registers;  /* Copy of pca9685 registers or NULL id not in sync */
 };
 
+/* Look-up table for PWM-registers per index */
+static const uint8_t pwm_reg_index[] = {
+    PWM0_ON_L,
+    PWM1_ON_L,
+    PWM2_ON_L,
+    PWM3_ON_L,
+
+    PWM4_ON_L,
+    PWM5_ON_L,
+    PWM6_ON_L,
+    PWM7_ON_L,
+
+    PWM8_ON_L,
+    PWM9_ON_L,
+    PWM10_ON_L,
+    PWM11_ON_L,
+
+    PWM12_ON_L,
+    PWM13_ON_L,
+    PWM14_ON_L,
+    PWM15_ON_L,
+
+    ALL_PWM_ON_L
+};
+
 /* Register bit-field struct:s */
 #if BYTES_BIG_ENDIAN
 typedef union {
@@ -324,15 +349,6 @@ void pwm_pca9685_init(pwm_hndl pwm)
      * is more intelligent */
     assert(pwm->registers->mode1.raw == 0x21);
     assert(pwm->registers->mode2.raw == 0x04);
-
-    {
-        uint32_t pwm_tmp;
-        pwm_reg_t pwm_formatted;
-        pwm_tmp = reg_read_uint32(pwm, PWM0_ON_L);
-        pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
-        printf("pwm: 0x%03X 0x%03X\n", pwm_formatted.on.CNTR,
-               pwm_formatted.off.CNTR);
-    }
 }
 
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
@@ -342,32 +358,30 @@ void pwm_pca9685_test(pwm_hndl pwm)
               PWM0_ON_L,
               0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
-    {
-        uint32_t pwm_tmp;
-        pwm_reg_t pwm_formatted;
-        pwm_tmp = reg_read_uint32(pwm, PWM4_ON_L);
-        pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
-        printf("pwm: 0x%03X 0x%03X\n", pwm_formatted.on.CNTR,
-               pwm_formatted.off.CNTR);
-
-        pwm_formatted.raw = 0;
-        pwm_formatted.on.CNTR = 0x500;
-        pwm_formatted.off.CNTR = 0x580;
-        reg_write_uint32(pwm, PWM5_ON_L, pwm_formatted.raw);
-        pwm_tmp = reg_read_uint32(pwm, PWM5_ON_L);
-        pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
-        printf("pwm: 0x%03X 0x%03X\n", pwm_formatted.on.CNTR,
-               pwm_formatted.off.CNTR);
-    }
 }
 
-void pwm_pca9685_set(pwm_hndl pwm, uint8_t number, struct pwm_setting val)
+void pwm_pca9685_set(pwm_hndl pwm, uint8_t number, struct pwm_val val)
 {
+    pwm_reg_t pwm_formatted;
+
+    pwm_formatted.raw = 0;
+    pwm_formatted.on.CNTR = val.on_cntr;
+    pwm_formatted.off.CNTR = val.off_cntr;
+
+    reg_write_uint32(pwm, pwm_reg_index[number], pwm_formatted.raw);
 }
 
-struct pwm_setting pwm_pca9685_get(pwm_hndl pwm, uint8_t number)
+struct pwm_val pwm_pca9685_get(pwm_hndl pwm, uint8_t number)
 {
-    struct pwm_setting val;
+    struct pwm_val val;
+    uint32_t pwm_tmp;
+    pwm_reg_t pwm_formatted;
+
+    pwm_tmp = reg_read_uint32(pwm, pwm_reg_index[number]);
+    pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
+
+    val.on_cntr = pwm_formatted.on.CNTR;
+    val.off_cntr = pwm_formatted.off.CNTR;
 
     return val;
 }
