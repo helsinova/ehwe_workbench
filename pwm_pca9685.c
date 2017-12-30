@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 #include <ehwe.h>
 #include <stm32f10x.h>
 #include "pwm_pca9685.h"
@@ -135,6 +136,21 @@ struct pwm_instance {
     uint8_t addr;               /* 7-bit write address - read-address implicit */
 };
 
+/* Register bit-field structs */
+typedef union {
+    struct {
+        uint8_t RESTART:1;
+        uint8_t EXTCLK:1;
+        uint8_t AI:1;
+        uint8_t SLEEP:1;
+        uint8_t SUB1:1;
+        uint8_t SUB2:1;
+        uint8_t SUB3:1;
+        uint8_t ALLCALL:1;
+    } __attribute__ ((packed, scalar_storage_order("big-endian")));
+    uint8_t raw;
+} reg_mode1_t;
+
 /* Invokes a SW reset-all.
    Note: this function resets ALL pca9685 devices attached to a certain
    i2c-bus.
@@ -168,15 +184,28 @@ void pwm_pca9685_destruct(pwm_hndl pwm)
 /* Initializes device and synchronizes driver with pca9685 device */
 void pwm_pca9685_init(pwm_hndl pwm)
 {
+    reg_mode1_t reg_mode1;
 
-    /* Clear SLEEP-bit */
+    assert(sizeof(reg_mode1_t) == 1);
+
+    /*Hard-coded for now. Replace with read-up of current value (TBD) */
+    reg_mode1.raw = 0;
+
+    reg_mode1.SLEEP = 0;
+    reg_mode1.ALLCALL = 1;
+    /* Assure bit-fields are oriented correctly for this architecture */
+    assert(reg_mode1.raw == 0x01);
+
     i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
-              MODE1, 0x01}, 2, 1);
+              MODE1, reg_mode1.raw}, 2, 1);
     usleep(500);
 
-    /* Set AI */
+    /* Set also AI */
+    reg_mode1.AI = 1;
+    /* Assure bit-fields are oriented correctly for this architecture */
+    assert(reg_mode1.raw == 0x21);
     i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
-              MODE1, 0x21}, 2, 1);
+              MODE1, reg_mode1.raw}, 2, 1);
 }
 
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
