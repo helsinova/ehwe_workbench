@@ -207,6 +207,8 @@ static void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val);
 /* Driver specific functions */
 static reg_mode1_t rget_mode1(pwm_hndl pwm);
 static reg_mode2_t rget_mode2(pwm_hndl pwm);
+static void rset_mode1(pwm_hndl pwm, reg_mode1_t val);
+static void rset_mode2(pwm_hndl pwm, reg_mode2_t val);
 
 /* Invokes a SW reset-all.
    Note: this function resets ALL pca9685 devices attached to a certain
@@ -246,6 +248,7 @@ void pwm_pca9685_destruct(pwm_hndl pwm)
 void pwm_pca9685_init(pwm_hndl pwm)
 {
     reg_mode1_t reg_mode1;
+    reg_mode2_t reg_mode2;
 
     assert(sizeof(reg_mode1_t) == 1);
 
@@ -265,12 +268,22 @@ void pwm_pca9685_init(pwm_hndl pwm)
     reg_mode1.AI = 1;
     /* Assure bit-fields are oriented correctly for this architecture */
     assert(reg_mode1.raw == 0x21);
-    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
-              MODE1, reg_mode1.raw}, 2, 1);
+    rset_mode1(pwm, reg_mode1);
+
+    /* Hard-coded as documented defaults for now. Replace with extended
+     * arguments for this function (TBD) */
+    reg_mode2.raw = 0;
+    reg_mode2.OUTDRV = 1;       /* Totem-pole outputs */
+    rset_mode2(pwm, reg_mode2);
 
     pwm->registers = malloc(sizeof(struct registers_t));
     pwm->registers->mode1 = rget_mode1(pwm);
     pwm->registers->mode2 = rget_mode2(pwm);
+
+    /* Temporary sanity test of read-back. To be removed/improved when init
+     * is more intelligent */
+    assert(pwm->registers->mode1.raw == 0x21);
+    assert(pwm->registers->mode2.raw == 0x04);
 }
 
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
@@ -328,6 +341,9 @@ uint32_t reg_read_uint32(pwm_hndl pwm, uint8_t reg)
 
 void reg_write_uint8(pwm_hndl pwm, uint8_t reg, uint8_t val)
 {
+    /* Send which register to access directly followed by value */
+    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
+              reg, val}, sizeof(val) + 1, 1);
 }
 
 void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val)
@@ -346,4 +362,14 @@ reg_mode1_t rget_mode1(pwm_hndl pwm)
 reg_mode2_t rget_mode2(pwm_hndl pwm)
 {
     return (reg_mode2_t) reg_read_uint8(pwm, MODE2);
+}
+
+void rset_mode1(pwm_hndl pwm, reg_mode1_t val)
+{
+    reg_write_uint8(pwm, MODE1, val.raw);
+}
+
+void rset_mode2(pwm_hndl pwm, reg_mode2_t val)
+{
+    reg_write_uint8(pwm, MODE2, val.raw);
 }
