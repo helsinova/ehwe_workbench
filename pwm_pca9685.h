@@ -26,10 +26,20 @@
  * API */
 typedef struct pwm_instance *pwm_hndl;
 
+/* 12-bit PWM settings for on- and off-times*/
+struct pwm_setting {
+    uint16_t on_cntr;
+    uint16_t off_cntr;
+};
+
 pwm_hndl pwm_pca9685_create(I2C_TypeDef * bus);
 void pwm_pca9685_destruct(pwm_hndl);
 void pwm_pca9685_init(pwm_hndl);
 void pwm_pca9685_all_swreset(I2C_TypeDef * bus);
+void pwm_pca9685_test(pwm_hndl);
+
+void pwm_pca9685_set(pwm_hndl, uint8_t number, struct pwm_setting);
+struct pwm_setting pwm_pca9685_get(pwm_hndl, uint8_t number);
 
 #ifdef EHWE
 #include "embedded_config.h"

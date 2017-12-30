@@ -163,6 +163,26 @@ typedef union {
     } __attribute__ ((packed));
     uint8_t raw;
 } reg_mode2_t;
+
+typedef union {
+    struct {
+        uint16_t _reserved:3;
+        uint16_t FULL:1;
+        uint16_t CNTR:12;
+    } __attribute__ ((packed));
+    uint8_t barray[2];
+    uint16_t raw;
+} pwm_counter_t;
+
+typedef union {
+    struct {
+        pwm_counter_t off;
+        pwm_counter_t on;
+    } __attribute__ ((packed));
+    uint8_t barray[4];
+    uint32_t raw;
+} pwm_reg_t;
+
 #else
 typedef union {
     struct {
@@ -188,6 +208,26 @@ typedef union {
     } __attribute__ ((packed));
     uint8_t raw;
 } reg_mode2_t;
+
+typedef union {
+    struct {
+        uint16_t CNTR:12;
+        uint16_t FULL:1;
+        uint16_t _reserved:3;
+    } __attribute__ ((packed));
+    uint8_t barray[2];
+    uint16_t raw;
+} pwm_counter_t;
+
+typedef union {
+    struct {
+        pwm_counter_t on;
+        pwm_counter_t off;
+    } __attribute__ ((packed));
+    uint8_t barray[4];
+    uint32_t raw;
+} pwm_reg_t;
+
 #endif
 
 struct registers_t {
@@ -205,10 +245,10 @@ static void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val);
 static void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val);
 
 /* Driver specific functions */
-static reg_mode1_t rget_mode1(pwm_hndl pwm);
-static reg_mode2_t rget_mode2(pwm_hndl pwm);
-static void rset_mode1(pwm_hndl pwm, reg_mode1_t val);
-static void rset_mode2(pwm_hndl pwm, reg_mode2_t val);
+static reg_mode1_t get_mode1(pwm_hndl pwm);
+static reg_mode2_t get_mode2(pwm_hndl pwm);
+static void set_mode1(pwm_hndl pwm, reg_mode1_t val);
+static void set_mode2(pwm_hndl pwm, reg_mode2_t val);
 
 /* Invokes a SW reset-all.
    Note: this function resets ALL pca9685 devices attached to a certain
@@ -268,22 +308,31 @@ void pwm_pca9685_init(pwm_hndl pwm)
     reg_mode1.AI = 1;
     /* Assure bit-fields are oriented correctly for this architecture */
     assert(reg_mode1.raw == 0x21);
-    rset_mode1(pwm, reg_mode1);
+    set_mode1(pwm, reg_mode1);
 
     /* Hard-coded as documented defaults for now. Replace with extended
      * arguments for this function (TBD) */
     reg_mode2.raw = 0;
     reg_mode2.OUTDRV = 1;       /* Totem-pole outputs */
-    rset_mode2(pwm, reg_mode2);
+    set_mode2(pwm, reg_mode2);
 
     pwm->registers = malloc(sizeof(struct registers_t));
-    pwm->registers->mode1 = rget_mode1(pwm);
-    pwm->registers->mode2 = rget_mode2(pwm);
+    pwm->registers->mode1 = get_mode1(pwm);
+    pwm->registers->mode2 = get_mode2(pwm);
 
     /* Temporary sanity test of read-back. To be removed/improved when init
      * is more intelligent */
     assert(pwm->registers->mode1.raw == 0x21);
     assert(pwm->registers->mode2.raw == 0x04);
+
+    {
+        uint32_t pwm_tmp;
+        pwm_reg_t pwm_formatted;
+        pwm_tmp = reg_read_uint32(pwm, PWM0_ON_L);
+        pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
+        printf("pwm: 0x%03X 0x%03X\n", pwm_formatted.on.CNTR,
+               pwm_formatted.off.CNTR);
+    }
 }
 
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
@@ -293,9 +342,39 @@ void pwm_pca9685_test(pwm_hndl pwm)
               PWM0_ON_L,
               0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
+    {
+        uint32_t pwm_tmp;
+        pwm_reg_t pwm_formatted;
+        pwm_tmp = reg_read_uint32(pwm, PWM4_ON_L);
+        pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
+        printf("pwm: 0x%03X 0x%03X\n", pwm_formatted.on.CNTR,
+               pwm_formatted.off.CNTR);
+
+        pwm_formatted.raw = 0;
+        pwm_formatted.on.CNTR = 0x500;
+        pwm_formatted.off.CNTR = 0x580;
+        reg_write_uint32(pwm, PWM5_ON_L, pwm_formatted.raw);
+        pwm_tmp = reg_read_uint32(pwm, PWM5_ON_L);
+        pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
+        printf("pwm: 0x%03X 0x%03X\n", pwm_formatted.on.CNTR,
+               pwm_formatted.off.CNTR);
+    }
+}
+
+void pwm_pca9685_set(pwm_hndl pwm, uint8_t number, struct pwm_setting val)
+{
+}
+
+struct pwm_setting pwm_pca9685_get(pwm_hndl pwm, uint8_t number)
+{
+    struct pwm_setting val;
+
+    return val;
 }
 
 /* Static functions */
+
+/* i2c generic low-level register access functions */
 uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg)
 {
     uint8_t val = 0;
@@ -319,7 +398,7 @@ uint16_t reg_read_uint16(pwm_hndl pwm, uint8_t reg)
               reg}, 1, 0);
 
     i2c_read(pwm->bus, pwm->addr, buf, sizeof(val));
-    val = *(uint16_t *)buf;     /* Should be converted using ntohs (TBD) */
+    val = *(uint16_t *)buf;
 
     return val;
 }
@@ -334,7 +413,7 @@ uint32_t reg_read_uint32(pwm_hndl pwm, uint8_t reg)
               reg}, 1, 0);
 
     i2c_read(pwm->bus, pwm->addr, buf, sizeof(val));
-    val = *(uint32_t *)buf;     /* Should be converted using ntoh (TBD) */
+    val = *(uint32_t *)buf;
 
     return val;
 }
@@ -348,28 +427,43 @@ void reg_write_uint8(pwm_hndl pwm, uint8_t reg, uint8_t val)
 
 void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val)
 {
+    uint8_t buf[sizeof(val) + 1];
+    buf[0] = reg;
+    *(uint16_t *)(&buf[1]) = val;
+
+    assert(sizeof(buf) == 3);
+
+    i2c_write(pwm->bus, pwm->addr, buf, sizeof(val) + 1, 1);
 }
 
 void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val)
 {
+    uint8_t buf[sizeof(val) + 1];
+    buf[0] = reg;
+    *(uint32_t *)(&buf[1]) = val;
+
+    assert(sizeof(buf) == 5);
+
+    i2c_write(pwm->bus, pwm->addr, buf, sizeof(val) + 1, 1);
 }
 
-reg_mode1_t rget_mode1(pwm_hndl pwm)
+/* Specific register high-level access functions */
+reg_mode1_t get_mode1(pwm_hndl pwm)
 {
     return (reg_mode1_t) reg_read_uint8(pwm, MODE1);
 }
 
-reg_mode2_t rget_mode2(pwm_hndl pwm)
+reg_mode2_t get_mode2(pwm_hndl pwm)
 {
     return (reg_mode2_t) reg_read_uint8(pwm, MODE2);
 }
 
-void rset_mode1(pwm_hndl pwm, reg_mode1_t val)
+void set_mode1(pwm_hndl pwm, reg_mode1_t val)
 {
     reg_write_uint8(pwm, MODE1, val.raw);
 }
 
-void rset_mode2(pwm_hndl pwm, reg_mode2_t val)
+void set_mode2(pwm_hndl pwm, reg_mode2_t val)
 {
     reg_write_uint8(pwm, MODE2, val.raw);
 }
