@@ -134,6 +134,7 @@
 struct pwm_instance {
     I2C_TypeDef *bus;           /* HW-bus: I2C0-I2Cn */
     uint8_t addr;               /* 7-bit write address - read-address implicit */
+    struct registers_t *registers;  /* Copy of pca9685 registers or NULL id not in sync */
 };
 
 /* Register bit-field struct:s */
@@ -151,6 +152,17 @@ typedef union {
     } __attribute__ ((packed));
     uint8_t raw;
 } reg_mode1_t;
+
+typedef union {
+    struct {
+        uint8_t _reserved:3;
+        uint8_t INVRT:1;
+        uint8_t OCH:1;
+        uint8_t OUTDRV:1;
+        uint8_t OUTNE:2;
+    } __attribute__ ((packed));
+    uint8_t raw;
+} reg_mode2_t;
 #else
 typedef union {
     struct {
@@ -165,7 +177,36 @@ typedef union {
     } __attribute__ ((packed));
     uint8_t raw;
 } reg_mode1_t;
+
+typedef union {
+    struct {
+        uint8_t OUTNE:2;
+        uint8_t OUTDRV:1;
+        uint8_t OCH:1;
+        uint8_t INVRT:1;
+        uint8_t _reserved:3;
+    } __attribute__ ((packed));
+    uint8_t raw;
+} reg_mode2_t;
 #endif
+
+struct registers_t {
+    reg_mode1_t mode1;
+    reg_mode2_t mode2;
+};
+
+/* Forward declaration of static functions */
+/* Generalized access functions */
+static uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg);
+static uint16_t reg_read_uint16(pwm_hndl pwm, uint8_t reg);
+static uint32_t reg_read_uint32(pwm_hndl pwm, uint8_t reg);
+static void reg_write_uint8(pwm_hndl pwm, uint8_t reg, uint8_t val);
+static void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val);
+static void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val);
+
+/* Driver specific functions */
+static reg_mode1_t rget_mode1(pwm_hndl pwm);
+static reg_mode2_t rget_mode2(pwm_hndl pwm);
 
 /* Invokes a SW reset-all.
    Note: this function resets ALL pca9685 devices attached to a certain
@@ -189,11 +230,15 @@ pwm_hndl pwm_pca9685_create(I2C_TypeDef * bus)
     /* Only default all-call address for now (TBD) */
     pwm->addr = DFLT_PCA9685_ADDR;
 
+    pwm->registers = NULL;
+
     return pwm;
 }
 
 void pwm_pca9685_destruct(pwm_hndl pwm)
 {
+    if (pwm->registers != NULL)
+        free(pwm->registers);
     free(pwm);
 }
 
@@ -222,6 +267,10 @@ void pwm_pca9685_init(pwm_hndl pwm)
     assert(reg_mode1.raw == 0x21);
     i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
               MODE1, reg_mode1.raw}, 2, 1);
+
+    pwm->registers = malloc(sizeof(struct registers_t));
+    pwm->registers->mode1 = rget_mode1(pwm);
+    pwm->registers->mode2 = rget_mode2(pwm);
 }
 
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
@@ -231,4 +280,70 @@ void pwm_pca9685_test(pwm_hndl pwm)
               PWM0_ON_L,
               0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
+}
+
+/* Static functions */
+uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg)
+{
+    uint8_t val = 0;
+
+    /* Send which register to access, omit STOP */
+    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
+              reg}, 1, 0);
+
+    i2c_read(pwm->bus, pwm->addr, &val, sizeof(val));
+
+    return val;
+}
+
+uint16_t reg_read_uint16(pwm_hndl pwm, uint8_t reg)
+{
+    uint16_t val = 0;
+    uint8_t buf[2];
+
+    /* Send which register to access, omit STOP */
+    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
+              reg}, 1, 0);
+
+    i2c_read(pwm->bus, pwm->addr, buf, sizeof(val));
+    val = *(uint16_t *)buf;     /* Should be converted using ntohs (TBD) */
+
+    return val;
+}
+
+uint32_t reg_read_uint32(pwm_hndl pwm, uint8_t reg)
+{
+    uint32_t val = 0;
+    uint8_t buf[4];
+
+    /* Send which register to access, omit STOP */
+    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
+              reg}, 1, 0);
+
+    i2c_read(pwm->bus, pwm->addr, buf, sizeof(val));
+    val = *(uint32_t *)buf;     /* Should be converted using ntoh (TBD) */
+
+    return val;
+}
+
+void reg_write_uint8(pwm_hndl pwm, uint8_t reg, uint8_t val)
+{
+}
+
+void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val)
+{
+}
+
+void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val)
+{
+}
+
+reg_mode1_t rget_mode1(pwm_hndl pwm)
+{
+    return (reg_mode1_t) reg_read_uint8(pwm, MODE1);
+}
+
+reg_mode2_t rget_mode2(pwm_hndl pwm)
+{
+    return (reg_mode2_t) reg_read_uint8(pwm, MODE2);
 }
