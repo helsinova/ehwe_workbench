@@ -23,6 +23,8 @@
  * pwm_pca9685 registers and layout
  */
 
+#include <stdint.h>
+
 /* Registers */
 #define MODE1                       0x00
 #define MODE2                       0x01

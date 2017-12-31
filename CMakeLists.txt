@@ -17,6 +17,7 @@ option(HAS_PRINTF
 set(LIBEMBEDDED_SOURCE
 	main.c
 	pwm_pca9685.c
+	pwm_pca9685_device.c
 	pwm_pca9685_regrw.c
 )
 

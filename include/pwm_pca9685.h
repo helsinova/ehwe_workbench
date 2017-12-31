@@ -20,11 +20,6 @@
 #ifndef pwm_pca9685_h
 #define pwm_pca9685_h
 
-/* Not strictly true as we will use Nordics higher-level API.
- * Include is a work-around for EHWE not separating them well enough. This
- * will change and might require a change of the include (TBD) */
-#include <stm32f10x.h>
-
 /* Forward declaration of instance-type hides details and enforces use of
  * API */
 typedef struct pwm_instance *pwm_hndl;

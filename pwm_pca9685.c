@@ -33,21 +33,17 @@
 #include <pwm_pca9685.h>
 #include "pwm_pca9685_regdefs.h"
 #include "pwm_pca9685_regrw.h"
+#include "pwm_pca9685_device.h"
 
 /* 7-bit W/r device default address */
 #define DFLT_PCA9685_ADDR           0x40
+
+static uint8_t pwm_reg_index(int index);
 
 struct registers_t {
     reg_mode1_t mode1;
     reg_mode2_t mode2;
 };
-
-/* Driver specific functions */
-static uint8_t pwm_reg_index(int index);
-static reg_mode1_t get_mode1(pwm_hndl pwm);
-static reg_mode2_t get_mode2(pwm_hndl pwm);
-static void set_mode1(pwm_hndl pwm, reg_mode1_t val);
-static void set_mode2(pwm_hndl pwm, reg_mode2_t val);
 
 /* Invokes a SW reset-all.
    Note: This function resets ALL pca9685 devices attached to a certain
@@ -134,6 +130,21 @@ void pwm_pca9685_test(pwm_hndl pwm)
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
 }
 
+/* Transform a PWM-index into a PWM-register "address".
+ * Valid indexes are {0-15, ALL_PWM}.
+ * There's no sanity checking, exceeding limits results in fold-over. */
+static uint8_t pwm_reg_index(int index)
+{
+    uint8_t regnum = ALL_PWM_ON_L;
+
+    if (index == ALL_PWM)
+        return regnum;
+
+    /* Optimized way of "((index % 16) * 4) + LOWEST_REG_NUMBER" */
+    regnum = index & 0xFuL;
+    return ((regnum << 2) + PWM0_ON_L);
+}
+
 void pwm_pca9685_set(pwm_hndl pwm, uint8_t index, struct pwm_val val)
 {
     pwm_reg_t pwm_formatted;
@@ -160,40 +171,4 @@ struct pwm_val pwm_pca9685_get(pwm_hndl pwm, uint8_t index)
     return val;
 }
 
-/* Static functions */
 
-/* Transform a PWM-index into a PWM-register "address".
- * Valid indexes are {0-15, ALL_PWM}.
- * There's no sanity checking, exceeding limits results in fold-over. */
-static uint8_t pwm_reg_index(int index)
-{
-    uint8_t regnum = ALL_PWM_ON_L;
-
-    if (index == ALL_PWM)
-        return regnum;
-
-    /* Optimized way of "((index % 16) * 4) + LOWEST_REG_NUMBER" */
-    regnum = index & 0xFuL;
-    return ((regnum << 2) + PWM0_ON_L);
-}
-
-/* Specific register high-level access functions */
-reg_mode1_t get_mode1(pwm_hndl pwm)
-{
-    return (reg_mode1_t) reg_read_uint8(pwm, MODE1);
-}
-
-reg_mode2_t get_mode2(pwm_hndl pwm)
-{
-    return (reg_mode2_t) reg_read_uint8(pwm, MODE2);
-}
-
-void set_mode1(pwm_hndl pwm, reg_mode1_t val)
-{
-    reg_write_uint8(pwm, MODE1, val.raw);
-}
-
-void set_mode2(pwm_hndl pwm, reg_mode2_t val)
-{
-    reg_write_uint8(pwm, MODE2, val.raw);
-}

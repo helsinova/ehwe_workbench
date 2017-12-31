@@ -17,29 +17,37 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef pwm_pca9685_regrw_h
-#define pwm_pca9685_regrw_h
+/*
+ * pwm_pca9685 device tier
+ */
 
-#include <stdint.h>
+#include <ctype.h>
+#include "pwm_pca9685_regdefs.h"
+#include "pwm_pca9685_regrw.h"
 
-/* Not strictly true as we will use Nordics higher-level API.
- * Include is a work-around for EHWE not separating them well enough. This
- * will change and might require a change of the include (TBD) */
-#include <stm32f10x.h>
-
-struct pwm_instance {
-    I2C_TypeDef *bus;           /* HW-bus: I2C0-I2Cn */
-    uint8_t addr;               /* 7-bit write address - read-address implicit */
-    struct registers_t *registers;  /* Copy of pca9685 registers or NULL if not in sync */
+struct registers_t {
+    reg_mode1_t mode1;
+    reg_mode2_t mode2;
 };
-typedef struct pwm_instance *pwm_hndl;
 
-uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg);
-uint16_t reg_read_uint16(pwm_hndl pwm, uint8_t reg);
-uint32_t reg_read_uint32(pwm_hndl pwm, uint8_t reg);
-void reg_write_uint8(pwm_hndl pwm, uint8_t reg, uint8_t val);
-void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val);
-void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val);
+/* Register high-level access functions */
+reg_mode1_t get_mode1(pwm_hndl pwm)
+{
+    return (reg_mode1_t) reg_read_uint8(pwm, MODE1);
+}
 
+reg_mode2_t get_mode2(pwm_hndl pwm)
+{
+    return (reg_mode2_t) reg_read_uint8(pwm, MODE2);
+}
 
-#endif //pwm_pca9685_regrw_h
+void set_mode1(pwm_hndl pwm, reg_mode1_t val)
+{
+    reg_write_uint8(pwm, MODE1, val.raw);
+}
+
+void set_mode2(pwm_hndl pwm, reg_mode2_t val)
+{
+    reg_write_uint8(pwm, MODE2, val.raw);
+}
+
