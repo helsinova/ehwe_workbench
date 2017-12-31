@@ -5,6 +5,9 @@ include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/interfaces/include")
 
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+
 option(STDLIB_TARGET
     "If real target has a working stdlib" ON)
 
@@ -14,6 +17,7 @@ option(HAS_PRINTF
 set(LIBEMBEDDED_SOURCE
 	main.c
 	pwm_pca9685.c
+	pwm_pca9685_regrw.c
 )
 
 # configure a header file to pass some of the CMake settings

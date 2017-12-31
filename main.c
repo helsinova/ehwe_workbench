@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     pwm_val.off_cntr = 0x0550;
     pwm_pca9685_set(pwm, 5, pwm_val);
 
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < 5; i++) {
         pwm_val = pwm_pca9685_get(pwm, i);
         printf("pwm[%d]: 0x%03X 0x%03X\n", i, pwm_val.on_cntr,
                pwm_val.off_cntr);
