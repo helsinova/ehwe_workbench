@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * pwm_pca9685 user functions library
+ * pwm_pca9685 driver
  */
 
 #include <ctype.h>
@@ -134,32 +134,7 @@
 struct pwm_instance {
     I2C_TypeDef *bus;           /* HW-bus: I2C0-I2Cn */
     uint8_t addr;               /* 7-bit write address - read-address implicit */
-    struct registers_t *registers;  /* Copy of pca9685 registers or NULL id not in sync */
-};
-
-/* Look-up table for PWM-registers per index */
-static const uint8_t pwm_reg_index[] = {
-    PWM0_ON_L,
-    PWM1_ON_L,
-    PWM2_ON_L,
-    PWM3_ON_L,
-
-    PWM4_ON_L,
-    PWM5_ON_L,
-    PWM6_ON_L,
-    PWM7_ON_L,
-
-    PWM8_ON_L,
-    PWM9_ON_L,
-    PWM10_ON_L,
-    PWM11_ON_L,
-
-    PWM12_ON_L,
-    PWM13_ON_L,
-    PWM14_ON_L,
-    PWM15_ON_L,
-
-    ALL_PWM_ON_L
+    struct registers_t *registers;  /* Copy of pca9685 registers or NULL if not in sync */
 };
 
 /* Register bit-field struct:s */
@@ -270,13 +245,14 @@ static void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val);
 static void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val);
 
 /* Driver specific functions */
+static uint8_t pwm_reg_index(int index);
 static reg_mode1_t get_mode1(pwm_hndl pwm);
 static reg_mode2_t get_mode2(pwm_hndl pwm);
 static void set_mode1(pwm_hndl pwm, reg_mode1_t val);
 static void set_mode2(pwm_hndl pwm, reg_mode2_t val);
 
 /* Invokes a SW reset-all.
-   Note: this function resets ALL pca9685 devices attached to a certain
+   Note: This function resets ALL pca9685 devices attached to a certain
    i2c-bus.
  */
 void pwm_pca9685_all_swreset(I2C_TypeDef * bus)
@@ -360,7 +336,7 @@ void pwm_pca9685_test(pwm_hndl pwm)
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
 }
 
-void pwm_pca9685_set(pwm_hndl pwm, uint8_t number, struct pwm_val val)
+void pwm_pca9685_set(pwm_hndl pwm, uint8_t index, struct pwm_val val)
 {
     pwm_reg_t pwm_formatted;
 
@@ -368,16 +344,16 @@ void pwm_pca9685_set(pwm_hndl pwm, uint8_t number, struct pwm_val val)
     pwm_formatted.on.CNTR = val.on_cntr;
     pwm_formatted.off.CNTR = val.off_cntr;
 
-    reg_write_uint32(pwm, pwm_reg_index[number], pwm_formatted.raw);
+    reg_write_uint32(pwm, pwm_reg_index(index), pwm_formatted.raw);
 }
 
-struct pwm_val pwm_pca9685_get(pwm_hndl pwm, uint8_t number)
+struct pwm_val pwm_pca9685_get(pwm_hndl pwm, uint8_t index)
 {
     struct pwm_val val;
     uint32_t pwm_tmp;
     pwm_reg_t pwm_formatted;
 
-    pwm_tmp = reg_read_uint32(pwm, pwm_reg_index[number]);
+    pwm_tmp = reg_read_uint32(pwm, pwm_reg_index(index));
     pwm_formatted = *((pwm_reg_t *) & pwm_tmp);
 
     val.on_cntr = pwm_formatted.on.CNTR;
@@ -387,6 +363,21 @@ struct pwm_val pwm_pca9685_get(pwm_hndl pwm, uint8_t number)
 }
 
 /* Static functions */
+
+/* Transform a PWM-index into a PWM-register "address".
+ * Valid indexes are {0-15, ALL_PWM}.
+ * There's no sanity checking, exceeding limits results in fold-over. */
+static uint8_t pwm_reg_index(int index)
+{
+    uint8_t regnum = ALL_PWM_ON_L;
+
+    if (index == ALL_PWM)
+        return regnum;
+
+    /* Optimized way of "((index % 16) * 4) + LOWEST_REG_NUMBER" */
+    regnum = index & 0xFuL;
+    return ((regnum << 2) + PWM0_ON_L);
+}
 
 /* i2c generic low-level register access functions */
 uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg)
