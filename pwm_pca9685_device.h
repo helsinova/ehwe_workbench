@@ -31,6 +31,7 @@ reg_mode1_t get_mode1(pwm_hndl pwm);
 reg_mode2_t get_mode2(pwm_hndl pwm);
 void set_mode1(pwm_hndl pwm, reg_mode1_t val);
 void set_mode2(pwm_hndl pwm, reg_mode2_t val);
+void set_pwm_freq(pwm_hndl pwm, unsigned int freq);
+unsigned int get_pwm_freq(pwm_hndl pwm);
 
-#endif //pwm_pca9685_device_h
-
+#endif                          //pwm_pca9685_device_h

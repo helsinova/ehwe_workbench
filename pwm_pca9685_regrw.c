@@ -100,4 +100,3 @@ void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val)
 
     i2c_write(pwm->bus, pwm->addr, buf, sizeof(val) + 1, 1);
 }
-

@@ -23,11 +23,9 @@
 
 #include "pwm_pca9685_regdefs.h"
 #include "pwm_pca9685_regrw.h"
+#include <assert.h>
 
-struct registers_t {
-    reg_mode1_t mode1;
-    reg_mode2_t mode2;
-};
+#define OSC_CLOCK 25000000
 
 /* Register high-level access functions */
 reg_mode1_t get_mode1(pwm_hndl pwm)
@@ -50,3 +48,27 @@ void set_mode2(pwm_hndl pwm, reg_mode2_t val)
     reg_write_uint8(pwm, MODE2, val.raw);
 }
 
+/* PWM-frequency set/get functions in Hz
+   Valid frequencies are 24-1526Hz
+
+   Note that device must be in SLEEP mode for frequency changes to take
+   effect.
+ */
+void set_pwm_freq(pwm_hndl pwm, unsigned int freq)
+{
+    uint8_t prescale = 0;
+
+    assert((freq >= 24) && (freq <= 1526));
+
+    prescale = OSC_CLOCK / (4096 * freq) - 1;
+    reg_write_uint8(pwm, PRE_SCALE, prescale);
+}
+
+unsigned int get_pwm_freq(pwm_hndl pwm)
+{
+    uint8_t prescale = 0;
+
+    prescale = reg_read_uint8(pwm, PRE_SCALE);
+
+    return OSC_CLOCK / ((prescale + 1) * 4096);
+}

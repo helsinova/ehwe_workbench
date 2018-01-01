@@ -21,12 +21,9 @@
  * pwm_pca9685 driver
  */
 
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
-#include <string.h>
-#include <math.h>
+#include <malloc.h>
 #include <assert.h>
 #include <ehwe.h>
 #include <stm32f10x.h>
@@ -89,6 +86,8 @@ void pwm_pca9685_init(pwm_hndl pwm)
 
     /*Hard-coded for now. Replace with read-up of current value (TBD) */
     reg_mode1.raw = 0;
+
+    set_pwm_freq(pwm, 50);      /* Standard analog servo frequency */
 
     reg_mode1.SLEEP = 0;
     reg_mode1.ALLCALL = 1;
@@ -170,5 +169,3 @@ struct pwm_val pwm_pca9685_get(pwm_hndl pwm, uint8_t index)
 
     return val;
 }
-
-
