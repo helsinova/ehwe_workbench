@@ -21,7 +21,6 @@
  * pwm_pca9685 device tier
  */
 
-#include <ctype.h>
 #include "pwm_pca9685_regdefs.h"
 #include "pwm_pca9685_regrw.h"
 

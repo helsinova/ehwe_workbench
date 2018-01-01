@@ -27,7 +27,6 @@
 
 #include <ehwe.h>
 #include <assert.h>
-#include <pwm_pca9685.h>
 #include "pwm_pca9685_regrw.h"
 
 uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg)
