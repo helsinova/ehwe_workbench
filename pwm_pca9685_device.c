@@ -111,13 +111,13 @@ void regs_sync(pwm_hndl pwm_dev)
 
     i2c_read(pwm_dev->bus, pwm_dev->addr, pwm_dev->reg->barray, regssz);
 #else
-	/* First part */
+    /* First part */
     i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               MODE1}, 1, 0);
     i2c_read(pwm_dev->bus, pwm_dev->addr, pwm_dev->reg->barray,
              sizeof(pwm_dev->reg->regs_part1));
 
-	/* Second part */
+    /* Second part */
     i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               ALL_PWM_ON_L}, 1, 0);
     i2c_read(pwm_dev->bus, pwm_dev->addr, pwm_dev->reg->barray,
@@ -133,7 +133,7 @@ reg_pwm_t get_pwm(pwm_hndl pwm_dev, uint8_t idx)
         if (idx == ALL_PWM)
             return pwm_dev->reg->allpwm;
 
-        return pwm_dev->reg->pwm[pwm_reg_index(idx)];
+        return pwm_dev->reg->pwm[idx];
     }
 
     return (reg_pwm_t) reg_read_uint32(pwm_dev, pwm_reg_index(idx));
@@ -143,7 +143,7 @@ void set_pwm(pwm_hndl pwm_dev, uint8_t idx, reg_pwm_t reg_pwm)
 {
     /* Try to short-cut if possible */
     if (pwm_dev->reg && (idx != ALL_PWM)) {
-        if (reg_pwm.raw == pwm_dev->reg->pwm[pwm_reg_index(idx)].raw)
+        if (reg_pwm.raw == pwm_dev->reg->pwm[idx].raw)
             /* Identical value cache<->device, so cut it short */
             return;
     }
@@ -154,7 +154,7 @@ void set_pwm(pwm_hndl pwm_dev, uint8_t idx, reg_pwm_t reg_pwm)
         if (idx == ALL_PWM)
             pwm_dev->reg->allpwm = reg_pwm;
         else
-            pwm_dev->reg->pwm[pwm_reg_index(idx)] = reg_pwm;
+            pwm_dev->reg->pwm[idx] = reg_pwm;
     }
 }
 

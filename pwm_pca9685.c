@@ -121,10 +121,64 @@ void pwm_pca9685_init(pwm_hndl pwm_dev)
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
 void pwm_pca9685_test(pwm_hndl pwm_dev)
 {
+    /* Predefined pattern */
+    reg_pwm_t pwm[] = {
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0,
+         .off.CNTR = 0x800,
+         },
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0x800,
+         .off.CNTR = 0,
+         },
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0x300,
+         .off.CNTR = 0x500,
+         },
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0x800,
+         .off.CNTR = 0x900,
+         },
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0xF00,
+         .off.CNTR = 0x100,
+         },
+    };
+
+    /* Set several pwm:s at once */
     i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               PWM0_ON_L,
-              0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
-              0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
+              pwm[0].barray[0], pwm[0].barray[1], pwm[0].barray[1],
+              pwm[0].barray[3],
+              pwm[1].barray[0], pwm[1].barray[1], pwm[1].barray[1],
+              pwm[1].barray[3],
+              pwm[2].barray[0], pwm[2].barray[1], pwm[2].barray[1],
+              pwm[2].barray[3],
+              pwm[3].barray[0], pwm[3].barray[1], pwm[3].barray[1],
+              pwm[3].barray[3],
+              pwm[4].barray[0], pwm[4].barray[1], pwm[4].barray[1],
+              pwm[4].barray[3]
+              }, 21, 1);
+
+    /* Update regs-cache */
+    if (pwm_dev->reg != NULL) {
+        int i, j = sizeof(pwm) / sizeof(reg_pwm_t);
+
+        for (i = 0; i < j; i++) {
+            pwm_dev->reg->pwm[i] = pwm[i];
+        }
+    }
+
 }
 
 void pwm_pca9685_set(pwm_hndl pwm_dev, int index, struct pwm_val val)
