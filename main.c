@@ -44,17 +44,21 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
+//x = atoi(optarg);
+/* Symbolic bus-interface ehwe has given this embedded work-bench */
+#define I2CN I2C1
+
 int main(int argc, char **argv)
 {
-    int i, c, x = 0;
+    int i, c/*, pwm_idx=0*/;
     pwm_hndl pwm;
     struct pwm_val pwm_val;
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
         switch (c) {
-            case 'x':
-                x = atoi(optarg);
+            case 'R':
+                pwm_pca9685_all_swreset(I2CN);
                 break;
             case '?':
                 if (optopt == 'x')
@@ -75,8 +79,8 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
-    pwm_pca9685_all_swreset(I2C1);
-    pwm = pwm_pca9685_create(I2C1);
+    pwm_pca9685_all_swreset(I2CN);
+    pwm = pwm_pca9685_create(I2CN);
 
     pwm_pca9685_init(pwm);
     pwm_pca9685_test(pwm);
@@ -101,7 +105,7 @@ int main(int argc, char **argv)
 
     /* Also check that it really is a BusPirate bound to the symbolic
      * bus-interface */
-    if (I2C1->device->devid == BUSPIRATE)
+    if (I2CN->device->devid == BUSPIRATE)
         exit(0);
 #endif
 
