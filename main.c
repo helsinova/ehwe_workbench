@@ -30,6 +30,7 @@
 #include <assert.h>
 
 #include <stm32f10x.h>
+#include <driver.h>
 #include <pwm_pca9685.h>
 #include <math.h>
 #include <devices.h>
@@ -91,6 +92,18 @@ int main(int argc, char **argv)
     }
 
     pwm_pca9685_destruct(pwm);
+
+#ifdef DEVICE_BUSPIRATE
+    /* Workaround due to that BP when switching mode back to bit-bang
+     * (BBIOx) on it's way to trerminal-mode will also send a reset to all
+     * 12C peripherals. I.e. free-running PWM will stop, which is not a
+     * desired behaviour. */
+
+    /* Also check that it really is a BusPirate bound to the symbolic
+     * bus-interface */
+    if (I2C1->device->devid == BUSPIRATE)
+        exit(0);
+#endif
 
     return 0;
 }
