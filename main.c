@@ -51,13 +51,20 @@
 int main(int argc, char **argv)
 {
     int i, c /*, pwm_idx=0 */ ;
-    pwm_hndl pwm;
+    pwm_hndl pwm_dev;
     struct pwm_val pwm_val;
+
+    pwm_dev = pwm_pca9685_create(I2CN);
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
         switch (c) {
             case 'R':
+                /* Reset all pca9685 on bus */
+                pwm_pca9685_all_swreset(I2CN);
+                break;
+            case 'd':
+                /* Reset all pca9685 on bus */
                 pwm_pca9685_all_swreset(I2CN);
                 break;
             case '?':
@@ -79,23 +86,22 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
-    pwm_pca9685_all_swreset(I2CN);
-    pwm = pwm_pca9685_create(I2CN);
+    pwm_dev = pwm_pca9685_create(I2CN);
 
-    pwm_pca9685_init(pwm);
-    pwm_pca9685_test(pwm);
+    pwm_pca9685_init(pwm_dev);
+    pwm_pca9685_test(pwm_dev);
 
     pwm_val.on_cntr = 0x0500;
     pwm_val.off_cntr = 0x0550;
-    pwm_pca9685_set(pwm, 5, pwm_val);
+    pwm_pca9685_set(pwm_dev, 5, pwm_val);
 
     for (i = 0; i < 5; i++) {
-        pwm_val = pwm_pca9685_get(pwm, i);
+        pwm_val = pwm_pca9685_get(pwm_dev, i);
         printf("pwm[%d]: 0x%03X 0x%03X\n", i, pwm_val.on_cntr,
                pwm_val.off_cntr);
     }
 
-    pwm_pca9685_destruct(pwm);
+    pwm_pca9685_destruct(pwm_dev);
 
 #ifdef DEVICE_BUSPIRATE
     /* Workaround due to that BP when switching mode back to bit-bang

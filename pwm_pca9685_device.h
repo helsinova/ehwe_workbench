@@ -62,16 +62,16 @@ struct devregs {
 };
 
 /* Device specific functions */
-reg_mode1_t get_mode1(pwm_hndl pwm);
-reg_mode2_t get_mode2(pwm_hndl pwm);
+reg_mode1_t get_mode1(pwm_hndl);
+reg_mode2_t get_mode2(pwm_hndl);
 reg_pwm_t get_pwm(pwm_hndl pwm, uint8_t idx);
 
-void set_mode1(pwm_hndl pwm, reg_mode1_t val);
-void set_mode2(pwm_hndl pwm, reg_mode2_t val);
-void set_pwm(pwm_hndl pwm, uint8_t idx, reg_pwm_t val);
+void set_mode1(pwm_hndl, reg_mode1_t);
+void set_mode2(pwm_hndl, reg_mode2_t);
+void set_pwm(pwm_hndl, uint8_t idx, reg_pwm_t val);
 
-void regs_sync(pwm_hndl pwm);
-void set_pwm_freq(pwm_hndl pwm, unsigned int freq);
-unsigned int get_pwm_freq(pwm_hndl pwm);
+void regs_sync(pwm_hndl);
+void set_pwm_freq(pwm_hndl, unsigned int freq);
+unsigned int get_pwm_freq(pwm_hndl);
 
 #endif                          //pwm_pca9685_device_h

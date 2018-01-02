@@ -36,11 +36,11 @@ struct pwm_instance {
 
 typedef struct pwm_instance *pwm_hndl;
 
-uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg);
-uint16_t reg_read_uint16(pwm_hndl pwm, uint8_t reg);
-uint32_t reg_read_uint32(pwm_hndl pwm, uint8_t reg);
-void reg_write_uint8(pwm_hndl pwm, uint8_t reg, uint8_t val);
-void reg_write_uint16(pwm_hndl pwm, uint8_t reg, uint16_t val);
-void reg_write_uint32(pwm_hndl pwm, uint8_t reg, uint32_t val);
+uint8_t reg_read_uint8(pwm_hndl, uint8_t reg);
+uint16_t reg_read_uint16(pwm_hndl, uint8_t reg);
+uint32_t reg_read_uint32(pwm_hndl, uint8_t reg);
+void reg_write_uint8(pwm_hndl, uint8_t reg, uint8_t val);
+void reg_write_uint16(pwm_hndl, uint8_t reg, uint16_t val);
+void reg_write_uint32(pwm_hndl, uint8_t reg, uint32_t val);
 
 #endif                          //pwm_pca9685_regrw_h

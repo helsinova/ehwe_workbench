@@ -64,29 +64,29 @@ pwm_hndl pwm_pca9685_create(I2C_TypeDef * bus)
     return pwm;
 }
 
-void pwm_pca9685_destruct(pwm_hndl pwm)
+void pwm_pca9685_destruct(pwm_hndl pwm_dev)
 {
-    if (pwm->reg != NULL)
-        free(pwm->reg);
-    free(pwm);
+    if (pwm_dev->reg != NULL)
+        free(pwm_dev->reg);
+    free(pwm_dev);
 }
 
 /* Initializes driver for specific pca9685 */
-void pwm_pca9685_init(pwm_hndl pwm)
+void pwm_pca9685_init(pwm_hndl pwm_dev)
 {
     reg_mode1_t reg_mode1;
     reg_mode2_t reg_mode2;
 
     /* Make sure at least AI is set before doing anything. I.e a small waste
      * of time but it can't be helped */
-    reg_mode1 = get_mode1(pwm);
+    reg_mode1 = get_mode1(pwm_dev);
     reg_mode1.AI = 1;
-    set_mode1(pwm, reg_mode1);
+    set_mode1(pwm_dev, reg_mode1);
 
     /* Query device for all it's registers */
-    regs_sync(pwm);
+    regs_sync(pwm_dev);
 
-    set_pwm_freq(pwm, 50);      /* Standard analog servo frequency */
+    set_pwm_freq(pwm_dev, 50);  /* Standard analog servo frequency */
 
     /*Hard-coded for now. Replace with read-up of current value (TBD) */
     reg_mode1.raw = 0;
@@ -96,7 +96,7 @@ void pwm_pca9685_init(pwm_hndl pwm)
     /* Assure bit-fields are oriented correctly for this architecture */
     assert(reg_mode1.raw == 0x01);
 
-    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
+    i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               MODE1, reg_mode1.raw}, 2, 1);
     usleep(500);
 
@@ -104,30 +104,30 @@ void pwm_pca9685_init(pwm_hndl pwm)
     reg_mode1.AI = 1;
     /* Assure bit-fields are oriented correctly for this architecture */
     assert(reg_mode1.raw == 0x21);
-    set_mode1(pwm, reg_mode1);
+    set_mode1(pwm_dev, reg_mode1);
 
     /* Hard-coded as documented defaults for now. Replace with extended
      * arguments for this function (TBD) */
     reg_mode2.raw = 0;
     reg_mode2.OUTDRV = 1;       /* Totem-pole outputs */
-    set_mode2(pwm, reg_mode2);
+    set_mode2(pwm_dev, reg_mode2);
 
     /* Temporary sanity test of read-back. To be removed/improved when init
      * is more intelligent */
-    assert(pwm->reg->mode1.raw == 0x21);
-    assert(pwm->reg->mode2.raw == 0x04);
+    assert(pwm_dev->reg->mode1.raw == 0x21);
+    assert(pwm_dev->reg->mode2.raw == 0x04);
 }
 
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */
-void pwm_pca9685_test(pwm_hndl pwm)
+void pwm_pca9685_test(pwm_hndl pwm_dev)
 {
-    i2c_write(pwm->bus, pwm->addr, (uint8_t[]) {
+    i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               PWM0_ON_L,
               0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00, 0x00, 0x00, 0x03, 0x00,
               0x05, 0x00, 0x08, 0x00, 0x09, 0x00, 0x0F, 0x00, 0x01}, 21, 1);
 }
 
-void pwm_pca9685_set(pwm_hndl pwm, int index, struct pwm_val val)
+void pwm_pca9685_set(pwm_hndl pwm_dev, int index, struct pwm_val val)
 {
     reg_pwm_t reg_pwm;
 
@@ -135,15 +135,15 @@ void pwm_pca9685_set(pwm_hndl pwm, int index, struct pwm_val val)
     reg_pwm.on.CNTR = val.on_cntr;
     reg_pwm.off.CNTR = val.off_cntr;
 
-    set_pwm(pwm, index, reg_pwm);
+    set_pwm(pwm_dev, index, reg_pwm);
 }
 
-struct pwm_val pwm_pca9685_get(pwm_hndl pwm, int index)
+struct pwm_val pwm_pca9685_get(pwm_hndl pwm_dev, int index)
 {
     struct pwm_val val;
     reg_pwm_t reg_pwm;
 
-    reg_pwm = get_pwm(pwm, index);
+    reg_pwm = get_pwm(pwm_dev, index);
     val.on_cntr = reg_pwm.on.CNTR;
     val.off_cntr = reg_pwm.off.CNTR;
 
