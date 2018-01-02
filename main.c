@@ -32,6 +32,7 @@
 #include <stm32f10x.h>
 #include <driver.h>
 #include <pwm_pca9685.h>
+#include "pwm_pca9685_device.h"
 #include <math.h>
 #include <devices.h>
 #include <interfaces.h>
@@ -44,28 +45,93 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
-//x = atoi(optarg);
 /* Symbolic bus-interface ehwe has given this embedded work-bench */
 #define I2CN I2C1
 
+/* Assume option argument-strings do not exceed this value */
+#define ARGSTR_MAX 80
+
+/* Parse pwm option as formatted string
+ *
+ * Format is number[:]number
+ *
+ * Each "number" is a valid numeric string in base {8,10,16} and "[:]" is a
+ * delimiter which is anything BUT a alpha-numeric character */
+struct pwm_val parse_pwm_opt(char *sarg)
+{
+    struct pwm_val pwm_val;
+    int i, found;
+    char *on_str = sarg;
+    char *off_str = "0\0";
+
+    for (i = 0, found = 0; i < ARGSTR_MAX && !found; i++) {
+        if (isalnum(sarg[i])) {
+            found = 1;
+            i--;
+        }
+    }
+
+    if (found) {
+        sarg[i] = 0;
+        off_str = &sarg[i + 1];
+    }
+
+    sscanf(on_str, "%i", &pwm_val.on_cntr);
+    sscanf(off_str, "%i", &pwm_val.off_cntr);
+
+    /* Returning a stack-variable which is OK when passed (returned) as value */
+    return pwm_val;
+}
+
 int main(int argc, char **argv)
 {
-    int i, c /*, pwm_idx=0 */ ;
+    int c, pwm_idx = 0;
     pwm_hndl pwm_dev;
     struct pwm_val pwm_val;
 
     pwm_dev = pwm_pca9685_create(I2CN);
+    pwm_pca9685_init(pwm_dev);
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "x:")) != -1) {
+    while ((c = getopt(argc, argv, "i:p:RdDsf:t")) != -1) {
         switch (c) {
+            case 'i':
+                /* PWM index to refer */
+                pwm_idx = atoi(optarg);
+                break;
+            case 'p':
+                /* Set PWM at current index and increment index */
+                pwm_pca9685_set(pwm_dev, pwm_idx, parse_pwm_opt(optarg));
+                pwm_idx++;
+                break;
             case 'R':
                 /* Reset all pca9685 on bus */
                 pwm_pca9685_all_swreset(I2CN);
                 break;
             case 'd':
-                /* Reset all pca9685 on bus */
-                pwm_pca9685_all_swreset(I2CN);
+                /* Dump registers in human readable form for pca9685 */
+                regs_dump(pwm_dev, printf);
+                break;
+            case 'D':
+                /* Hex-dump registers for pca9685 */
+                regs_dump_hex(pwm_dev, printf);
+                break;
+            case 's':
+                /* Explicitly sync device regs copy */
+                regs_sync(pwm_dev);
+                break;
+            case 'f':
+                /* Set PWM-frequency 24-1526 Hz */
+                set_pwm_freq(pwm_dev, atoi(optarg));
+                regs_sync(pwm_dev);
+                break;
+            case 't':
+                /* Set a pre-defined PWM test-pattern */
+                pwm_pca9685_test(pwm_dev);
+
+                pwm_val.on_cntr = 0x0500;
+                pwm_val.off_cntr = 0x0550;
+                pwm_pca9685_set(pwm_dev, 5, pwm_val);
                 break;
             case '?':
                 if (optopt == 'x')
@@ -85,21 +151,24 @@ int main(int argc, char **argv)
     if (optind < argc) {
         //somevar = argv[optind];
     }
-
+/*
     pwm_dev = pwm_pca9685_create(I2CN);
 
     pwm_pca9685_init(pwm_dev);
+*/
     pwm_pca9685_test(pwm_dev);
 
     pwm_val.on_cntr = 0x0500;
     pwm_val.off_cntr = 0x0550;
     pwm_pca9685_set(pwm_dev, 5, pwm_val);
 
+    int i;
     for (i = 0; i < 6; i++) {
         pwm_val = pwm_pca9685_get(pwm_dev, i);
         printf("pwm[%d]: 0x%03X 0x%03X\n", i, pwm_val.on_cntr,
                pwm_val.off_cntr);
     }
+    regs_dump(pwm_dev, printf);
 
     pwm_pca9685_destruct(pwm_dev);
 

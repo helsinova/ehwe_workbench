@@ -77,18 +77,14 @@ void pwm_pca9685_init(pwm_hndl pwm_dev)
     reg_mode1_t reg_mode1;
     reg_mode2_t reg_mode2;
 
-    /* Make sure at least AI is set before doing anything. I.e a small waste
-     * of time but it can't be helped */
+    /* Make sure at least AI is set before doing anything else. */
     reg_mode1 = get_mode1(pwm_dev);
-    reg_mode1.AI = 1;
-    set_mode1(pwm_dev, reg_mode1);
+    if (!reg_mode1.AI) {
+        reg_mode1.AI = 1;
+        set_mode1(pwm_dev, reg_mode1);
+    }
 
-    /* Query device for all it's registers */
-    regs_sync(pwm_dev);
-
-    set_pwm_freq(pwm_dev, 50);  /* Standard analog servo frequency */
-
-    /*Hard-coded for now. Replace with read-up of current value (TBD) */
+    /* Hard-coded for now. Replace with read-up of current value (TBD) */
     reg_mode1.raw = 0;
     reg_mode1.SLEEP = 0;
     reg_mode1.ALLCALL = 1;
@@ -111,11 +107,6 @@ void pwm_pca9685_init(pwm_hndl pwm_dev)
     reg_mode2.raw = 0;
     reg_mode2.OUTDRV = 1;       /* Totem-pole outputs */
     set_mode2(pwm_dev, reg_mode2);
-
-    /* Temporary sanity test of read-back. To be removed/improved when init
-     * is more intelligent */
-    assert(pwm_dev->reg->mode1.raw == 0x21);
-    assert(pwm_dev->reg->mode2.raw == 0x04);
 }
 
 /* Set-up PWM0-PWM4 to a pre-defined test-pattern  */

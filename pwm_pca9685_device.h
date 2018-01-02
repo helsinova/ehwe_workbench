@@ -71,6 +71,9 @@ void set_mode2(pwm_hndl, reg_mode2_t);
 void set_pwm(pwm_hndl, uint8_t idx, reg_pwm_t val);
 
 void regs_sync(pwm_hndl);
+void regs_dump(pwm_hndl pwm_dev, int (*printf_func) (const char *format, ...));
+void regs_dump_hex(pwm_hndl pwm_dev,
+                   int (*printf_func) (const char *format, ...));
 void set_pwm_freq(pwm_hndl, unsigned int freq);
 unsigned int get_pwm_freq(pwm_hndl);
 

@@ -26,8 +26,8 @@ typedef struct pwm_instance *pwm_hndl;
 
 /* 12-bit PWM settings for on- and off-times*/
 struct pwm_val {
-    uint16_t on_cntr;
-    uint16_t off_cntr;
+    int on_cntr;
+    int off_cntr;
 };
 
 pwm_hndl pwm_pca9685_create(I2C_TypeDef * bus);
