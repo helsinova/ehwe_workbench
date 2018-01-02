@@ -26,9 +26,9 @@
 #include "pwm_pca9685_regdefs.h"
 #include "pwm_pca9685_regrw.h"
 
-#define DEVREGS_CONTAIN_RESERVED_REGS   /* Used as padding to map device reg-map
-                                           exactly if complete reg-dups are 
-                                           faster */
+/* Used as padding to map device reg-map exactly if complete reg-dumps are
+ * faster. This depends on which bus-interface is used */
+//#define DEVREGS_CONTAIN_RESERVED_REGS
 
 struct devregs {
     union {
