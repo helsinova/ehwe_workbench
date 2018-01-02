@@ -40,7 +40,7 @@ struct devregs {
                 uint8_t subadr2;
                 uint8_t subadr3;
                 uint8_t allcalladdr;
-                reg_pwm_t pwm_cntr[16];
+                reg_pwm_t pwm[16];
             };
             uint8_t regs_part1[70];
         };
@@ -51,7 +51,7 @@ struct devregs {
 
         union {
             struct {
-                reg_pwm_t allpwm_cntr;
+                reg_pwm_t allpwm;
                 uint8_t prescale;
                 uint8_t testmode;
             };

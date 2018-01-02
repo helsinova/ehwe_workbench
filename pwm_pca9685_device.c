@@ -117,16 +117,34 @@ void regs_sync(pwm_hndl pwm_dev)
 
 reg_pwm_t get_pwm(pwm_hndl pwm_dev, uint8_t idx)
 {
-    reg_pwm_t reg_pwm;
+    /* Return cashed info if available */
+    if (pwm_dev->reg) {
+        if (idx == ALL_PWM)
+            return pwm_dev->reg->allpwm;
 
-    reg_pwm = (reg_pwm_t) reg_read_uint32(pwm_dev, pwm_reg_index(idx));
+        return pwm_dev->reg->pwm[pwm_reg_index(idx)];
+    }
 
-    return reg_pwm;
+    return (reg_pwm_t) reg_read_uint32(pwm_dev, pwm_reg_index(idx));
 }
 
 void set_pwm(pwm_hndl pwm_dev, uint8_t idx, reg_pwm_t reg_pwm)
 {
+    /* Try to short-cut if possible */
+    if (pwm_dev->reg && (idx != ALL_PWM)) {
+        if (reg_pwm.raw == pwm_dev->reg->pwm[pwm_reg_index(idx)].raw)
+            /* Identical value cache<->device, so cut it short */
+            return;
+    }
+
     reg_write_uint32(pwm_dev, pwm_reg_index(idx), reg_pwm.raw);
+
+    if (pwm_dev->reg) {
+        if (idx == ALL_PWM)
+            pwm_dev->reg->allpwm = reg_pwm;
+        else
+            pwm_dev->reg->pwm[pwm_reg_index(idx)] = reg_pwm;
+    }
 }
 
 /* Transform a PWM-index into a PWM-register "address".
