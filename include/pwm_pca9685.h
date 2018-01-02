@@ -37,9 +37,9 @@ void pwm_pca9685_all_swreset(I2C_TypeDef * bus);
 void pwm_pca9685_test(pwm_hndl);
 
 /* Access API of individual PWM:s*/
-#define ALL_PWM -1
-void pwm_pca9685_set(pwm_hndl, uint8_t index, struct pwm_val);
-struct pwm_val pwm_pca9685_get(pwm_hndl, uint8_t index);
+#define ALL_PWM 16
+void pwm_pca9685_set(pwm_hndl, int index, struct pwm_val);
+struct pwm_val pwm_pca9685_get(pwm_hndl, int index);
 
 #ifdef EHWE
 #include "embedded_config.h"

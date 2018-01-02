@@ -30,8 +30,10 @@
 struct pwm_instance {
     I2C_TypeDef *bus;           /* HW-bus: I2C0-I2Cn */
     uint8_t addr;               /* 7-bit write address - read-address implicit */
-    struct registers_t *registers;  /* Copy of pca9685 registers or NULL if not in sync */
+    struct devregs *reg;        /* Copy of pca9685 all registers or NULL if
+                                   not in sync */
 };
+
 typedef struct pwm_instance *pwm_hndl;
 
 uint8_t reg_read_uint8(pwm_hndl pwm, uint8_t reg);

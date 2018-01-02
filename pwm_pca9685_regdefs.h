@@ -165,7 +165,7 @@ typedef union {
     } __attribute__ ((packed));
     uint8_t barray[4];
     uint32_t raw;
-} pwm_reg_t;
+} reg_pwm_t;
 
 #else
 typedef union {
@@ -210,7 +210,7 @@ typedef union {
     } __attribute__ ((packed));
     uint8_t barray[4];
     uint32_t raw;
-} pwm_reg_t;
+} reg_pwm_t;
 
 #endif
 

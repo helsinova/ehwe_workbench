@@ -50,7 +50,7 @@
 
 int main(int argc, char **argv)
 {
-    int i, c/*, pwm_idx=0*/;
+    int i, c /*, pwm_idx=0 */ ;
     pwm_hndl pwm;
     struct pwm_val pwm_val;
 
