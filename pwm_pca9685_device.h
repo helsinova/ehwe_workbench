@@ -31,7 +31,7 @@
 //#define DEVREGS_CONTAIN_RESERVED_REGS
 
 struct devregs {
-    union {
+    struct {
         union {
             struct {
                 reg_mode1_t mode1;
@@ -57,7 +57,12 @@ struct devregs {
             };
             uint8_t regs_part2[6];
         };
+
+#ifdef DEVREGS_CONTAIN_RESERVED_REGS
         uint8_t barray[256];
+#else
+        uint8_t barray[256 - 180];
+#endif
     };
 };
 

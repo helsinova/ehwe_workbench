@@ -114,13 +114,13 @@ void regs_sync(pwm_hndl pwm_dev)
     /* First part */
     i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               MODE1}, 1, 0);
-    i2c_read(pwm_dev->bus, pwm_dev->addr, pwm_dev->reg->barray,
+    i2c_read(pwm_dev->bus, pwm_dev->addr, pwm_dev->reg->regs_part1,
              sizeof(pwm_dev->reg->regs_part1));
 
     /* Second part */
     i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               ALL_PWM_ON_L}, 1, 0);
-    i2c_read(pwm_dev->bus, pwm_dev->addr, pwm_dev->reg->barray,
+    i2c_read(pwm_dev->bus, pwm_dev->addr, pwm_dev->reg->regs_part2,
              sizeof(pwm_dev->reg->regs_part2));
 #endif
 
