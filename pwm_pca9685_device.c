@@ -136,20 +136,6 @@ void regs_dump(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
 {
     int i;
 
-    /*
-       reg_mode1_t mode1;
-       reg_mode2_t mode2;
-       uint8_t subadr1;
-       uint8_t subadr2;
-       uint8_t subadr3;
-       uint8_t allcalladdr;
-       reg_pwm_t pwm[16];
-
-       reg_pwm_t allpwm;
-       uint8_t prescale;
-       uint8_t testmode;
-     */
-
     if (!pwm_dev->reg)
         regs_sync(pwm_dev);
 
@@ -183,7 +169,14 @@ void regs_dump(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
            pwm_dev->reg->pwm[i].off.FULL, pwm_dev->reg->pwm[i].off.CNTR);
     }
 
-    pf("Hello\n");
+    /* Special "ALLPWMW register */
+    pf("pwm[16]: on.FULL(%d) on.CNTR(0x%-3X) ",
+       pwm_dev->reg->pwm[i].on.FULL, pwm_dev->reg->allpwm.on.CNTR);
+    pf("off.FULL(%d) off.CNTR(0x%-3X)\n",
+       pwm_dev->reg->pwm[i].off.FULL, pwm_dev->reg->allpwm.off.CNTR);
+
+    pf("PRESCALE(0x%02X)\n", pwm_dev->reg->prescale);
+    pf("TestMode(0x%02X)\n", pwm_dev->reg->testmode);
 }
 
 /* Dump device register using printf-like function.
@@ -193,7 +186,7 @@ void regs_dump(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
  */
 void regs_dump_hex(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
 {
-    int i, j;
+    int i, j, k;
 
     if (!pwm_dev->reg)
         regs_sync(pwm_dev);
@@ -208,13 +201,16 @@ void regs_dump_hex(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
 
     pf("..\n");
 
-    for (i = 250, j = 0; i < 256; i++, j++) {
+    for (i = 250, j = 0, k =
+         pwm_dev->reg->regs_part2 - pwm_dev->reg->regs_part1; i < 256;
+         i++, j++, k++) {
         if (!(j % 8)) {
             pf("\n");
             pf("%02X: ", i);
         }
-        pf("%02X ", pwm_dev->reg->barray[i]);
+        pf("%02X ", pwm_dev->reg->barray[k]);
     }
+    pf("\n");
 
 }
 
