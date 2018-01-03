@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     pwm_pca9685_init(pwm_dev);
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:p:PRrdDsf:t")) != -1) {
+    while ((c = getopt(argc, argv, "i:p:PRrdDsf:Ft")) != -1) {
         switch (c) {
             case 'i':
                 /* PWM index to refer */
@@ -137,7 +137,10 @@ int main(int argc, char **argv)
             case 'f':
                 /* Set PWM-frequency 24-1526 Hz */
                 set_pwm_freq(pwm_dev, atoi(optarg));
-                regs_sync(pwm_dev);
+                break;
+            case 'F':
+                /* Print device PWM-frequency */
+                printf("PWM-frequency (Hz): %d\n", get_pwm_freq(pwm_dev));
                 break;
             case 't':
                 /* Set a pre-defined PWM test-pattern PWM-0 - PWM-5 */

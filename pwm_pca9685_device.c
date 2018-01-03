@@ -79,11 +79,23 @@ void set_mode2(pwm_hndl pwm_dev, reg_mode2_t val)
 void set_pwm_freq(pwm_hndl pwm_dev, unsigned int freq)
 {
     uint8_t prescale = 0;
+    reg_mode1_t t_mode1, o_mode1;
 
     assert((freq >= 24) && (freq <= 1526));
 
+    o_mode1 = get_mode1(pwm_dev);
+    t_mode1 = o_mode1;
+
+    if (!t_mode1.SLEEP) {
+        t_mode1.SLEEP = 1;
+        set_mode1(pwm_dev, t_mode1);
+    }
+
     prescale = OSC_CLOCK / (4096 * freq) - 1;
     reg_write_uint8(pwm_dev, PRE_SCALE, prescale);
+
+    if (o_mode1.SLEEP != t_mode1.SLEEP)
+        set_mode1(pwm_dev, o_mode1);
 
     if (pwm_dev->reg)
         pwm_dev->reg->prescale = prescale;
@@ -93,7 +105,10 @@ unsigned int get_pwm_freq(pwm_hndl pwm_dev)
 {
     uint8_t prescale = 0;
 
-    prescale = reg_read_uint8(pwm_dev, PRE_SCALE);
+    if (pwm_dev->reg)
+        prescale = pwm_dev->reg->prescale;
+    else
+        prescale = reg_read_uint8(pwm_dev, PRE_SCALE);
 
     return OSC_CLOCK / ((prescale + 1) * 4096);
 }
