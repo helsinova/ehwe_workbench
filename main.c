@@ -65,7 +65,7 @@ struct pwm_val parse_pwm_opt(char *sarg)
     char *off_str = "0\0";
 
     for (i = 0, found = 0; i < ARGSTR_MAX && !found; i++) {
-        if (isalnum(sarg[i])) {
+        if (!isalnum(sarg[i])) {
             found = 1;
             i--;
         }
@@ -85,7 +85,7 @@ struct pwm_val parse_pwm_opt(char *sarg)
 
 int main(int argc, char **argv)
 {
-    int c, pwm_idx = 0;
+    int c, i, pwm_idx = 0;
     pwm_hndl pwm_dev;
     struct pwm_val pwm_val;
 
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     pwm_pca9685_init(pwm_dev);
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:p:RdDsf:t")) != -1) {
+    while ((c = getopt(argc, argv, "i:p:PRrdDsf:t")) != -1) {
         switch (c) {
             case 'i':
                 /* PWM index to refer */
@@ -103,6 +103,20 @@ int main(int argc, char **argv)
                 /* Set PWM at current index and increment index */
                 pwm_pca9685_set(pwm_dev, pwm_idx, parse_pwm_opt(optarg));
                 pwm_idx++;
+                break;
+            case 'P':
+                /* Read and print PWM at current index and increment index */
+                pwm_val = pwm_pca9685_get(pwm_dev, pwm_idx);
+                printf("pwm[%-2d]: 0x%03X 0x%03X\n", pwm_idx, pwm_val.on_cntr,
+                       pwm_val.off_cntr);
+                pwm_idx++;
+                break;
+            case 'r':
+                for (i = 0; i < 17; i++) {
+                    pwm_val = pwm_pca9685_get(pwm_dev, i);
+                    printf("pwm[%-2d]: 0x%03X 0x%03X\n", i, pwm_val.on_cntr,
+                           pwm_val.off_cntr);
+                }
                 break;
             case 'R':
                 /* Reset all pca9685 on bus */
@@ -126,12 +140,13 @@ int main(int argc, char **argv)
                 regs_sync(pwm_dev);
                 break;
             case 't':
-                /* Set a pre-defined PWM test-pattern */
+                /* Set a pre-defined PWM test-pattern PWM-0 - PWM-5 */
                 pwm_pca9685_test(pwm_dev);
 
-                pwm_val.on_cntr = 0x0500;
-                pwm_val.off_cntr = 0x0550;
-                pwm_pca9685_set(pwm_dev, 5, pwm_val);
+                /* Set also PWM-6. The time-difference on analyzer shows
+                 * execution delay for various bus HW-interfaces */
+                pwm_pca9685_set(pwm_dev, 6, (struct pwm_val) {
+                                0x0500, 0x0550});
                 break;
             case '?':
                 if (optopt == 'x')
@@ -151,30 +166,13 @@ int main(int argc, char **argv)
     if (optind < argc) {
         //somevar = argv[optind];
     }
-/*
-    pwm_dev = pwm_pca9685_create(I2CN);
-
-    pwm_pca9685_init(pwm_dev);
-*/
-    pwm_pca9685_test(pwm_dev);
-
-    pwm_val.on_cntr = 0x0500;
-    pwm_val.off_cntr = 0x0550;
-    pwm_pca9685_set(pwm_dev, 5, pwm_val);
-
-    int i;
-    for (i = 0; i < 6; i++) {
-        pwm_val = pwm_pca9685_get(pwm_dev, i);
-        printf("pwm[%d]: 0x%03X 0x%03X\n", i, pwm_val.on_cntr,
-               pwm_val.off_cntr);
-    }
-    regs_dump(pwm_dev, printf);
 
     pwm_pca9685_destruct(pwm_dev);
 
+    printf("Embedded work-bench exits normally...\n\n");
 #ifdef DEVICE_BUSPIRATE
     /* Workaround due to that BP when switching mode back to bit-bang
-     * (BBIOx) on it's way to trerminal-mode will also send a reset to all
+     * (BBIOx) on it's way to terminal-mode will also send a reset to all
      * 12C peripherals. I.e. free-running PWM will stop, which is not a
      * desired behaviour. */
 
