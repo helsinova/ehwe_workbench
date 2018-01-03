@@ -149,15 +149,15 @@ void pwm_pca9685_test(pwm_hndl pwm_dev)
     /* Set several pwm:s at once */
     i2c_write(pwm_dev->bus, pwm_dev->addr, (uint8_t[]) {
               PWM0_ON_L,
-              pwm[0].barray[0], pwm[0].barray[1], pwm[0].barray[1],
+              pwm[0].barray[0], pwm[0].barray[1], pwm[0].barray[2],
               pwm[0].barray[3],
-              pwm[1].barray[0], pwm[1].barray[1], pwm[1].barray[1],
+              pwm[1].barray[0], pwm[1].barray[1], pwm[1].barray[2],
               pwm[1].barray[3],
-              pwm[2].barray[0], pwm[2].barray[1], pwm[2].barray[1],
+              pwm[2].barray[0], pwm[2].barray[1], pwm[2].barray[2],
               pwm[2].barray[3],
-              pwm[3].barray[0], pwm[3].barray[1], pwm[3].barray[1],
+              pwm[3].barray[0], pwm[3].barray[1], pwm[3].barray[2],
               pwm[3].barray[3],
-              pwm[4].barray[0], pwm[4].barray[1], pwm[4].barray[1],
+              pwm[4].barray[0], pwm[4].barray[1], pwm[4].barray[2],
               pwm[4].barray[3]
               }, 21, 1);
 
