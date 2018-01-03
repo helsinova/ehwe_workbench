@@ -114,30 +114,42 @@ void pwm_pca9685_test(pwm_hndl pwm_dev)
 {
     /* Predefined pattern */
     reg_pwm_t pwm[] = {
+        /* PWM-0 */
         {
          .on.FULL = 0,
          .off.FULL = 0,
-         .on.CNTR = 0,
+         .on.CNTR = 0x111,
+         .off.CNTR = 0x222,
+         },
+        /* PWM-1 */
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0x333,
+         .off.CNTR = 0x444,
+         },
+        /* PWM-2 */
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0x555,
+         .off.CNTR = 0x666,
+         },
+        /* PWM-3 50% square */
+        {
+         .on.FULL = 0,
+         .off.FULL = 0,
+         .on.CNTR = 0x000,
          .off.CNTR = 0x800,
          },
+        /* PWM-4 counter-phase to PWM-3 */
         {
          .on.FULL = 0,
          .off.FULL = 0,
          .on.CNTR = 0x800,
-         .off.CNTR = 0,
+         .off.CNTR = 0x000,
          },
-        {
-         .on.FULL = 0,
-         .off.FULL = 0,
-         .on.CNTR = 0x300,
-         .off.CNTR = 0x500,
-         },
-        {
-         .on.FULL = 0,
-         .off.FULL = 0,
-         .on.CNTR = 0x800,
-         .off.CNTR = 0x900,
-         },
+        /* PWM-5 Overflow period boundary */
         {
          .on.FULL = 0,
          .off.FULL = 0,
@@ -158,8 +170,10 @@ void pwm_pca9685_test(pwm_hndl pwm_dev)
               pwm[3].barray[0], pwm[3].barray[1], pwm[3].barray[2],
               pwm[3].barray[3],
               pwm[4].barray[0], pwm[4].barray[1], pwm[4].barray[2],
-              pwm[4].barray[3]
-              }, 21, 1);
+              pwm[4].barray[3],
+              pwm[5].barray[0], pwm[5].barray[1], pwm[5].barray[2],
+              pwm[5].barray[3]
+              }, 25, 1);
 
     /* Update regs-cache */
     if (pwm_dev->reg != NULL) {

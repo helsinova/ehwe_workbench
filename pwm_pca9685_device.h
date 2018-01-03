@@ -31,40 +31,39 @@
 //#define DEVREGS_CONTAIN_RESERVED_REGS
 
 struct devregs {
-    struct {
-        union {
-            struct {
-                reg_mode1_t mode1;
-                reg_mode2_t mode2;
-                uint8_t subadr1;
-                uint8_t subadr2;
-                uint8_t subadr3;
-                uint8_t allcalladdr;
-                reg_pwm_t pwm[16];
-            };
-            uint8_t regs_part1[70];
-        };
-
-#ifdef DEVREGS_CONTAIN_RESERVED_REGS
-        uint8_t regs_reserved[180];
-#endif
-
-        union {
-            struct {
-                reg_pwm_t allpwm;
-                uint8_t prescale;
-                uint8_t testmode;
-            };
-            uint8_t regs_part2[6];
-        };
-
-#ifdef DEVREGS_CONTAIN_RESERVED_REGS
-        uint8_t barray[256];
-#else
-        uint8_t barray[256 - 180];
-#endif
+    union {
+        struct {
+            reg_mode1_t mode1;
+            reg_mode2_t mode2;
+            uint8_t subadr1;
+            uint8_t subadr2;
+            uint8_t subadr3;
+            uint8_t allcalladdr;
+            reg_pwm_t pwm[16];
+        } __attribute__ ((packed));
+        uint8_t regs_part1[70];
     };
-};
+
+#ifdef DEVREGS_CONTAIN_RESERVED_REGS
+    uint8_t regs_reserved[180];
+#endif
+
+    union {
+        struct {
+            reg_pwm_t allpwm;
+            uint8_t prescale;
+            uint8_t testmode;
+        } __attribute__ ((packed));
+        uint8_t regs_part2[6];
+    };
+
+#ifdef DEVREGS_CONTAIN_RESERVED_REGS
+    uint8_t barray[256];
+#else
+    uint8_t barray[256 - 180];
+#endif
+
+} __attribute__ ((packed));
 
 /* Device specific functions */
 reg_mode1_t get_mode1(pwm_hndl);
