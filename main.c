@@ -198,17 +198,6 @@ int main(int argc, char **argv)
     pwm_pca9685_destruct(pwm_dev);
 
     printf("Embedded work-bench exits normally...\n\n");
-#ifdef DEVICE_BUSPIRATE
-    /* Workaround due to that BP when switching mode back to bit-bang
-     * (BBIOx) on it's way to terminal-mode will also send a reset to all
-     * 12C peripherals. I.e. free-running PWM will stop, which is not a
-     * desired behaviour. */
-
-    /* Also check that it really is a BusPirate bound to the symbolic
-     * bus-interface */
-    if (I2CN->device->devid == BUSPIRATE)
-        exit(0);
-#endif
 
     return 0;
 }
