@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
-#include <assert.h>
+#include <assure.h>
 
 #include <stm32f10x.h>
 #include <driver.h>
@@ -43,6 +43,10 @@
 #else
 #define PRINTF(...) ((void)(0))
 #define FFLUSH(...) ((void)(0))
+#endif
+
+#ifndef SYNC_FILE
+#define SYNC_FILE "/tmp/pwm.regs"
 #endif
 
 /* Symbolic bus-interface ehwe has given this embedded work-bench */
@@ -88,12 +92,20 @@ int main(int argc, char **argv)
     int c, i, pwm_idx = 0;
     pwm_hndl pwm_dev;
     struct pwm_val pwm_val;
+    FILE *regsf;
+    char *sync_fn;
+
+    sync_fn = getenv("PCA9685_REGS_FILENAME");
+    if (sync_fn == NULL)
+        sync_fn = SYNC_FILE;
+
+    ASSURE(regsf = fopen(sync_fn, "w"));
 
     pwm_dev = pwm_pca9685_create(I2CN);
     pwm_pca9685_init(pwm_dev);
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:p:PRrdDsf:Ft")) != -1) {
+    while ((c = getopt(argc, argv, "i:p:PRrdDsf:FtX")) != -1) {
         switch (c) {
             case 'i':
                 /* PWM index to refer */
@@ -124,15 +136,24 @@ int main(int argc, char **argv)
                 break;
             case 'd':
                 /* Dump registers in human readable form for pca9685 */
-                regs_dump(pwm_dev, printf);
+                regs_dump(pwm_dev, fprintf, stderr);
                 break;
             case 'D':
                 /* Hex-dump registers for pca9685 */
-                regs_dump_hex(pwm_dev, printf);
+                regs_dump_hex(pwm_dev, fprintf, stderr);
                 break;
             case 's':
                 /* Explicitly sync device regs copy */
                 regs_sync(pwm_dev);
+                break;
+            case 'X':
+                /* Explicitly un-sync device regs copy */
+                if (regs_insync(pwm_dev)) {
+                    regs_unsync(pwm_dev);
+                    if (regsf)
+                        fclose(regsf);
+                    unlink(sync_fn);
+                }
                 break;
             case 'f':
                 /* Set PWM-frequency 24-1526 Hz */
@@ -169,6 +190,10 @@ int main(int argc, char **argv)
     if (optind < argc) {
         //somevar = argv[optind];
     }
+
+    /* Save for next invocation */
+    if (regs_insync(pwm_dev))
+        regs_dump_hex(pwm_dev, fprintf, regsf);
 
     pwm_pca9685_destruct(pwm_dev);
 

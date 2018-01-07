@@ -25,6 +25,9 @@
 
 #include "pwm_pca9685_regdefs.h"
 #include "pwm_pca9685_regrw.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 /* Used as padding to map device reg-map exactly if complete reg-dumps are
  * faster. This depends on which bus-interface is used */
@@ -78,9 +81,13 @@ void set_mode2(pwm_hndl, reg_mode2_t);
 void set_pwm(pwm_hndl, uint8_t idx, reg_pwm_t val);
 
 void regs_sync(pwm_hndl);
-void regs_dump(pwm_hndl pwm_dev, int (*printf_func) (const char *format, ...));
+void regs_unsync(pwm_hndl);
+bool regs_insync(pwm_hndl);
+void regs_dump(pwm_hndl pwm_dev,
+               int (*fprintf_func) (FILE *, const char *format, ...), FILE *);
 void regs_dump_hex(pwm_hndl pwm_dev,
-                   int (*printf_func) (const char *format, ...));
+                   int (*fprintf_func) (FILE *, const char *format, ...),
+                   FILE *);
 void set_pwm_freq(pwm_hndl, unsigned int freq);
 unsigned int get_pwm_freq(pwm_hndl);
 

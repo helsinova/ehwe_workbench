@@ -141,65 +141,88 @@ void regs_sync(pwm_hndl pwm_dev)
 
 }
 
-/* Dump device register using printf-like function.
+/* Remove the drivers copy of registers, hence force HW interaction without
+ * cache */
+void regs_unsync(pwm_hndl pwm_dev)
+{
+    if (pwm_dev->reg) {
+        free(pwm_dev->reg);
+        pwm_dev->reg = NULL;
+    }
+}
+
+/* Returns if regs are in sync or not */
+bool regs_insync(pwm_hndl pwm_dev)
+{
+    if (pwm_dev->reg)
+        return true;
+    else
+        return false;
+}
+
+/* Dump device register using printf-like function (variadic)
  *
- * As function, either use printf or roll your own with the same signature.
+ * As function, either use fprintf  or roll your own with the same
+ * signature.
  *
- * I.e. print to file, you need a wrapper function as FILE is neither passed
- * nor assumed */
-void regs_dump(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
+ * Last argument is expected to be an valid file (stdout, stderr or openend
+ * for write file).
+ */
+void regs_dump(pwm_hndl pwm_dev, int (*pf) (FILE *, const char *format, ...),
+               FILE *file)
 {
     int i;
 
     if (!pwm_dev->reg)
         regs_sync(pwm_dev);
 
-    pf("MODE1: ");
-    pf("RESTART(%d) ", pwm_dev->reg->mode1.RESTART);
-    pf("EXTCLK(%d) ", pwm_dev->reg->mode1.EXTCLK);
-    pf("AI(%d) ", pwm_dev->reg->mode1.AI);
-    pf("SLEEP(%d) ", pwm_dev->reg->mode1.SLEEP);
-    pf("SUB1(%d) ", pwm_dev->reg->mode1.SUB1);
-    pf("SUB2(%d) ", pwm_dev->reg->mode1.SUB2);
-    pf("SUB3(%d) ", pwm_dev->reg->mode1.SUB3);
-    pf("ALLCALL(%d)", pwm_dev->reg->mode1.ALLCALL);
-    pf("\n");
+    pf(file, "MODE1: ");
+    pf(file, "RESTART(%d) ", pwm_dev->reg->mode1.RESTART);
+    pf(file, "EXTCLK(%d) ", pwm_dev->reg->mode1.EXTCLK);
+    pf(file, "AI(%d) ", pwm_dev->reg->mode1.AI);
+    pf(file, "SLEEP(%d) ", pwm_dev->reg->mode1.SLEEP);
+    pf(file, "SUB1(%d) ", pwm_dev->reg->mode1.SUB1);
+    pf(file, "SUB2(%d) ", pwm_dev->reg->mode1.SUB2);
+    pf(file, "SUB3(%d) ", pwm_dev->reg->mode1.SUB3);
+    pf(file, "ALLCALL(%d)", pwm_dev->reg->mode1.ALLCALL);
+    pf(file, "\n");
 
-    pf("MODE2: ");
-    pf("INVRT(%d) ", pwm_dev->reg->mode2.INVRT);
-    pf("OCH(%d) ", pwm_dev->reg->mode2.OCH);
-    pf("OUTDRV(%d) ", pwm_dev->reg->mode2.OUTDRV);
-    pf("OUTNE(%d) ", pwm_dev->reg->mode2.OUTNE);
-    pf("\n");
+    pf(file, "MODE2: ");
+    pf(file, "INVRT(%d) ", pwm_dev->reg->mode2.INVRT);
+    pf(file, "OCH(%d) ", pwm_dev->reg->mode2.OCH);
+    pf(file, "OUTDRV(%d) ", pwm_dev->reg->mode2.OUTDRV);
+    pf(file, "OUTNE(%d) ", pwm_dev->reg->mode2.OUTNE);
+    pf(file, "\n");
 
-    pf("SUBADR1: 0x%02X\n", pwm_dev->reg->subadr1);
-    pf("SUBADR2: 0x%02X\n", pwm_dev->reg->subadr2);
-    pf("SUBADR3: 0x%02X\n", pwm_dev->reg->subadr3);
-    pf("ALLCALLADR: 0x%02X\n", pwm_dev->reg->allcalladdr);
+    pf(file, "SUBADR1: 0x%02X\n", pwm_dev->reg->subadr1);
+    pf(file, "SUBADR2: 0x%02X\n", pwm_dev->reg->subadr2);
+    pf(file, "SUBADR3: 0x%02X\n", pwm_dev->reg->subadr3);
+    pf(file, "ALLCALLADR: 0x%02X\n", pwm_dev->reg->allcalladdr);
 
     for (i = 0; i < 16; i++) {
-        pf("pwm[%2d]: on.FULL(%d) on.CNTR(0x%-3X) ", i,
+        pf(file, "pwm[%2d]: on.FULL(%d) on.CNTR(0x%-3X) ", i,
            pwm_dev->reg->pwm[i].on.FULL, pwm_dev->reg->pwm[i].on.CNTR);
-        pf("off.FULL(%d) off.CNTR(0x%-3X)\n",
+        pf(file, "off.FULL(%d) off.CNTR(0x%-3X)\n",
            pwm_dev->reg->pwm[i].off.FULL, pwm_dev->reg->pwm[i].off.CNTR);
     }
 
     /* Special "ALLPWMW register */
-    pf("pwm[16]: on.FULL(%d) on.CNTR(0x%-3X) ",
+    pf(file, "pwm[16]: on.FULL(%d) on.CNTR(0x%-3X) ",
        pwm_dev->reg->pwm[i].on.FULL, pwm_dev->reg->allpwm.on.CNTR);
-    pf("off.FULL(%d) off.CNTR(0x%-3X)\n",
+    pf(file, "off.FULL(%d) off.CNTR(0x%-3X)\n",
        pwm_dev->reg->pwm[i].off.FULL, pwm_dev->reg->allpwm.off.CNTR);
 
-    pf("PRESCALE(0x%02X)\n", pwm_dev->reg->prescale);
-    pf("TestMode(0x%02X)\n", pwm_dev->reg->testmode);
+    pf(file, "PRESCALE(0x%02X)\n", pwm_dev->reg->prescale);
+    pf(file, "TestMode(0x%02X)\n", pwm_dev->reg->testmode);
 }
 
 /* Dump device register using printf-like function.
  *
- * As the above, but as a raw hex-dump
+ * As the regs_dump, but as a raw hex-dump
  *
  */
-void regs_dump_hex(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
+void regs_dump_hex(pwm_hndl pwm_dev,
+                   int (*pf) (FILE *, const char *format, ...), FILE *file)
 {
     int i, j, k;
 
@@ -208,24 +231,24 @@ void regs_dump_hex(pwm_hndl pwm_dev, int (*pf) (const char *format, ...))
 
     for (i = 0, j = 0; i < 70; i++, j++) {
         if (!(j % 8)) {
-            pf("\n");
-            pf("%02X: ", i);
+            pf(file, "\n");
+            pf(file, "%02X: ", i);
         }
-        pf("%02X ", pwm_dev->reg->barray[i]);
+        pf(file, "%02X ", pwm_dev->reg->barray[i]);
     }
 
-    pf("..\n");
+    pf(file, "..\n");
 
     for (i = 250, j = 0, k =
          pwm_dev->reg->regs_part2 - pwm_dev->reg->regs_part1; i < 256;
          i++, j++, k++) {
         if (!(j % 8)) {
-            pf("\n");
-            pf("%02X: ", i);
+            pf(file, "\n");
+            pf(file, "%02X: ", i);
         }
-        pf("%02X ", pwm_dev->reg->barray[k]);
+        pf(file, "%02X ", pwm_dev->reg->barray[k]);
     }
-    pf("\n");
+    pf(file, "\n");
 
 }
 
