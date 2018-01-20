@@ -55,6 +55,9 @@
 /* Assume option argument-strings do not exceed this value */
 #define ARGSTR_MAX 80
 
+/* Start frequency in Hz for frequency ramp-testing */
+#define START_FREQ 25
+
 /* Parse pwm option as formatted string
  *
  * Format is number[:]number
@@ -87,9 +90,89 @@ struct pwm_val parse_pwm_opt(char *sarg)
     return pwm_val;
 }
 
+/* Tests for the -tn flag. n == test_n */
+
+static void test_0(pwm_hndl pwm_dev)
+{
+    /* Set a pre-defined PWM test-pattern PWM-0 - PWM-5 */
+    pwm_pca9685_test(pwm_dev);
+
+    /* Set also PWM-6 and then 7. The time-difference on
+     * analyzer shows execution delay for various bus
+     * HW-interfaces */
+    pwm_pca9685_set(pwm_dev, 6, (struct pwm_val) {
+                    0x0000, 0x0050});
+    pwm_pca9685_set(pwm_dev, 7, (struct pwm_val) {
+                    0x0000, 0x0050});
+}
+
+/* Define a new small PWM as fast as possible from 0-7 */
+static void test_1(pwm_hndl pwm_dev)
+{
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        pwm_pca9685_set(pwm_dev, i, (struct pwm_val) {
+                        0x0000, 0x0050});
+    }
+
+}
+
+/* Change PWM frequency at a certain rate. You should set analyzer to
+ * trigger on SCL or PWM4-7 to see this */
+static void test_2(pwm_hndl pwm_dev)
+{
+    int i, f;
+
+    set_pwm_freq(pwm_dev, START_FREQ);
+
+    /* Set up some PWMS to use as markers. PWM duty is set long so PWM-off
+     * can be seen */
+    for (i = 4; i < 8; i++) {
+        pwm_pca9685_set(pwm_dev, i, (struct pwm_val) {
+                        0x0000, 0x0FF0});
+    }
+    usleep(10000);
+
+    for (i = 0, f = START_FREQ; i < 1000; i += 50, f++) {
+        set_pwm_freq(pwm_dev, f);
+
+        /*Allow time for period to complete, and then add some.. */
+        usleep(((3 * 1000000) / f) + 100);
+    }
+}
+
+static void test_3(pwm_hndl pwm_dev)
+{
+}
+
+static void test_4(pwm_hndl pwm_dev)
+{
+}
+
+static void test_5(pwm_hndl pwm_dev)
+{
+}
+
+static void test_6(pwm_hndl pwm_dev)
+{
+}
+
+static void test_7(pwm_hndl pwm_dev)
+{
+}
+
+static void test_8(pwm_hndl pwm_dev)
+{
+}
+
+static void test_9(pwm_hndl pwm_dev)
+{
+}
+
 int main(int argc, char **argv)
 {
-    int c, i, pwm_idx = 0;
+    int c, i, ti = 0, pwm_idx = 0;
     pwm_hndl pwm_dev;
     struct pwm_val pwm_val;
     FILE *regsf;
@@ -105,7 +188,7 @@ int main(int argc, char **argv)
     pwm_pca9685_init(pwm_dev);
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "i:p:PRrdDsf:FtX")) != -1) {
+    while ((c = getopt(argc, argv, "i:p:PRrdDsf:Ft:X")) != -1) {
         switch (c) {
             case 'i':
                 /* PWM index to refer */
@@ -164,13 +247,42 @@ int main(int argc, char **argv)
                 printf("PWM-frequency (Hz): %d\n", get_pwm_freq(pwm_dev));
                 break;
             case 't':
-                /* Set a pre-defined PWM test-pattern PWM-0 - PWM-5 */
-                pwm_pca9685_test(pwm_dev);
-
-                /* Set also PWM-6. The time-difference on analyzer shows
-                 * execution delay for various bus HW-interfaces */
-                pwm_pca9685_set(pwm_dev, 6, (struct pwm_val) {
-                                0x0500, 0x0550});
+                ti = atoi(optarg);
+                switch (ti) {
+                    case 0:
+                        test_0(pwm_dev);
+                        break;
+                    case 1:
+                        test_1(pwm_dev);
+                        break;
+                    case 2:
+                        test_2(pwm_dev);
+                        break;
+                    case 3:
+                        test_3(pwm_dev);
+                        break;
+                    case 4:
+                        test_4(pwm_dev);
+                        break;
+                    case 5:
+                        test_5(pwm_dev);
+                        break;
+                    case 6:
+                        test_6(pwm_dev);
+                        break;
+                    case 7:
+                        test_7(pwm_dev);
+                        break;
+                    case 8:
+                        test_8(pwm_dev);
+                        break;
+                    case 9:
+                        test_9(pwm_dev);
+                        break;
+                    default:
+                        fprintf(stderr, "Test %s is undefined\n", optarg);
+                        break;
+                }
                 break;
             case '?':
                 if (optopt == 'x')
