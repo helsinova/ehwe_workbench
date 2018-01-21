@@ -1,5 +1,7 @@
 # ehwe device settings for single invocations
 # modify according to bus-interface used
 
-EHWE_DEVICE="i2c:1:bp:master:/dev/ttyUSB0"
-EHWE_VERBOSITY="warning"
+#EHWE_DEVICE="i2c:1:bp:master:/dev/ttyUSB0"
+EHWE_DEVICE="i2c:1:hif:master:0"
+#EHWE_VERBOSITY="warning"
+EHWE_VERBOSITY="error"
