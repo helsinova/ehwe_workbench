@@ -1,3 +1,6 @@
+# back-up files (vim etc)
+*.*~
+
 # Object files
 *.o
 *.ko
