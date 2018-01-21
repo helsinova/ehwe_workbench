@@ -168,7 +168,7 @@ int main(int argc, char **argv)
         /* Point at first value register-set again */
         my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
                   DATA_OUTPUT_X_MSB_REGISTER}, 1, 1);
-        usleep(67000);
+        //usleep(67000);
 
         /* Read values */
         my_i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
