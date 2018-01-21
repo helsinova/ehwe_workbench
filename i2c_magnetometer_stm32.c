@@ -31,6 +31,8 @@
 #include <arpa/inet.h>
 #include <math.h>
 
+#error This program has regressed and does not work anymore. Please USE_STM32_API=OFF
+
 #define HMC5883L_ADDR				0x1E
 #define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
 #define CONFIGURATION_REGISTER_B	0x01    /* Read/Write */
@@ -56,7 +58,7 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
-void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
+void my_i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
                int len)
 {
     int i;
@@ -84,7 +86,7 @@ void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
     I2C_GenerateSTOP(bus, ENABLE);
 }
 
-void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
+void my_i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
 {
     int i;
 
@@ -155,27 +157,27 @@ int main(int argc, char **argv)
 #endif
 
     /* Set measurement mode to 8-average, 15Hz */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
               CONFIGURATION_REGISTER_A, 0x70}, 2 );
 
     /* Set gain to 5 */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
               CONFIGURATION_REGISTER_B, 0xa0}, 2 );
 
     /* Set to continuous mode */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
               MODE_REGISTER, 0x00}, 2 );
 
     usleep(6000);
 
     for (i = 0; i < x; i++) {
         /* Point at first value register-set again */
-        i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+        my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
                   DATA_OUTPUT_X_MSB_REGISTER}, 1 );
         usleep(67000);
 
         /* Read values */
-        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
+        my_i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
         X = (data[0] << 8) + data[1];
         Z = (data[2] << 8) + data[3];
         Y = (data[4] << 8) + data[5];

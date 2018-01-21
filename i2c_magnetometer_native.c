@@ -34,6 +34,14 @@
 #include "../devices/buspirate/local.h"
 #include <devices.h>
 
+/* Workaround for up coming name-conflict in ehwe-core where I2C is
+ * depricated. This WA should work for both new and old either application-
+ * or core-code
+ */
+#ifndef I2C
+#define I2C ROLE_I2C
+#endif                          //I2C
+
 #define HMC5883L_ADDR				0x1E
 #define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
 #define CONFIGURATION_REGISTER_B	0x01    /* Read/Write */
@@ -65,7 +73,7 @@
 #define WRITE_ADDR( A ) (A<<1)
 #define READ_ADDR( A ) ((A<<1) | 0x01)
 
-void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
+void my_i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
                int len, int send_stop)
 {
     int ack;
@@ -89,7 +97,7 @@ void i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
     }
 }
 
-void i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
+void my_i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
 {
     int ack;
 
@@ -143,27 +151,27 @@ int main(int argc, char **argv)
     }
 
     /* Set measurement mode to 8-average, 15Hz */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
               CONFIGURATION_REGISTER_A, 0x70}, 2, 1);
 
     /* Set gain to 5 */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
               CONFIGURATION_REGISTER_B, 0xa0}, 2, 1);
 
     /* Set to continuous mode */
-    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
               MODE_REGISTER, 0x00}, 2, 1);
 
     usleep(6000);
 
     for (i = 0; i < x; i++) {
         /* Point at first value register-set again */
-        i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+        my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
                   DATA_OUTPUT_X_MSB_REGISTER}, 1, 1);
         usleep(67000);
 
         /* Read values */
-        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
+        my_i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
         X = (data[0] << 8) + data[1];
         Z = (data[2] << 8) + data[3];
         Y = (data[4] << 8) + data[5];
