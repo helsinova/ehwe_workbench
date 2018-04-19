@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2015 by Michael Ambrus                                  *
- *   ambrmi09@gmail.com                                                    *
+ *   Copyright (C) 2018 by Michael Ambrus                                  *
+ *   michael@helsinova.se                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c-magnetometer HMC5883L using stm32 API
+ * Test program: i2c-magnetometer HMC5883L using native API
  */
 
 #include <ctype.h>
@@ -26,12 +26,20 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <stm32f10x.h>
-#include "i2c_magnetometer.h"
-#include <arpa/inet.h>
 #include <math.h>
 
-#error This program has regressed and does not work anymore. Please USE_STM32_API=OFF
+#include <ehwe.h>
+#include <fg_bq27441.h>
+#include "fg_bq27441_device.h"
+#include <devices.h>
+#include <interfaces.h>
+
+
+#ifdef EHWE
+#include "embedded_config.h"
+#define main embedded_main
+#endif
+
 
 #define HMC5883L_ADDR				0x1E
 #define CONFIGURATION_REGISTER_A	0x00    /* Read/Write */
@@ -58,69 +66,11 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
-void my_i2c_write(I2C_TypeDef * bus, uint8_t dev_addr, const uint8_t *buffer,
-               int len)
-{
-    int i;
-
-    while (I2C_GetFlagStatus(bus, I2C_FLAG_BUSY)) ;
-
-    /* Send START condition */
-    I2C_GenerateSTART(bus, ENABLE);
-
-    /* Test on EV5 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_MODE_SELECT)) ;
-
-    /* Send device address for write */
-    I2C_Send7bitAddress(bus, dev_addr, I2C_Direction_Transmitter);
-
-    /* Test on EV6 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) ;
-
-    for (i = 0; i < len; i++) {
-        I2C_SendData(bus, buffer[i]);
-        while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) ;
-    }
-
-    /* Close Communication */
-    I2C_GenerateSTOP(bus, ENABLE);
-}
-
-void my_i2c_read(I2C_TypeDef * bus, uint8_t dev_addr, uint8_t *buffer, int len)
-{
-    int i;
-
-    while (I2C_GetFlagStatus(bus, I2C_FLAG_BUSY)) ;
-
-    /* Send START condition */
-    I2C_GenerateSTART(bus, ENABLE);
-
-    /* Test on EV5 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_MODE_SELECT)) ;
-
-    /* Send IC address for read */
-    I2C_Send7bitAddress(bus, dev_addr, I2C_Direction_Receiver);
-
-    /* Test on EV6 and clear it */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)) ;
-
-    /* Read all but the last with auto ACK */
-    for (i = 0; i < (len - 1); i++) {
-        while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
-        buffer[i] = I2C_ReceiveData(bus);
-    }
-
-    I2C_AcknowledgeConfig(bus, DISABLE);
-    /* Close Communication */
-    I2C_GenerateSTOP(bus, ENABLE);
-
-    /* Read the last one */
-    while (!I2C_CheckEvent(bus, I2C_EVENT_MASTER_BYTE_RECEIVED)) ;
-    buffer[i] = I2C_ReceiveData(bus);
-
-    /* Re-enable HW auto ACK for next time */
-    I2C_AcknowledgeConfig(bus, ENABLE);
-}
+#define DDATA( B ) (B->ddata)
+#define DD( B ) (DDATA(B)->driver.i2c)
+#define DEV( B ) (DD(B)->device)
+#define WRITE_ADDR( A ) (A<<1)
+#define READ_ADDR( A ) ((A<<1) | 0x01)
 
 int main(int argc, char **argv)
 {
@@ -129,7 +79,6 @@ int main(int argc, char **argv)
     double vectlen;
     uint8_t data[6] = { 0 };
 
-#ifdef STDLIB_TARGET
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
         switch (c) {
@@ -154,30 +103,29 @@ int main(int argc, char **argv)
     if (optind < argc) {
         //somevar = argv[optind];
     }
-#endif
 
     /* Set measurement mode to 8-average, 15Hz */
-    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              CONFIGURATION_REGISTER_A, 0x70}, 2 );
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              CONFIGURATION_REGISTER_A, 0x70}, 2, 1);
 
     /* Set gain to 5 */
-    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              CONFIGURATION_REGISTER_B, 0xa0}, 2 );
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              CONFIGURATION_REGISTER_B, 0xa0}, 2, 1);
 
     /* Set to continuous mode */
-    my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-              MODE_REGISTER, 0x00}, 2 );
+    i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+              MODE_REGISTER, 0x00}, 2, 1);
 
     usleep(6000);
 
     for (i = 0; i < x; i++) {
         /* Point at first value register-set again */
-        my_i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
-                  DATA_OUTPUT_X_MSB_REGISTER}, 1 );
-        usleep(67000);
+        i2c_write(I2C1, HMC5883L_ADDR, (uint8_t[]) {
+                  DATA_OUTPUT_X_MSB_REGISTER}, 1, 1);
+        //usleep(67000);
 
         /* Read values */
-        my_i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
+        i2c_read(I2C1, HMC5883L_ADDR, data, sizeof(data));
         X = (data[0] << 8) + data[1];
         Z = (data[2] << 8) + data[3];
         Y = (data[4] << 8) + data[5];
