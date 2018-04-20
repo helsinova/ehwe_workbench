@@ -20,6 +20,9 @@
 #ifndef fg_bq27441_device_h
 #define fg_bq27441_device_h
 
+/* Device address (7-bit) */
+#define BQ27441_ADDR 0x55
+
 /*
  * Commands
  */

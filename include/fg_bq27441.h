@@ -22,9 +22,25 @@
 #ifndef fg_bq27441_h
 #define fg_bq27441_h
 
-#ifdef EHWE
-#include "embedded_config.h"
-#define main embedded_main
-#endif
+//void Control();
+float Temperature();
+float Voltage();
+//void Flags();
+//void NominalAvailableCapacity();
+//void FullAvailableCapacity();
+//void RemainingCapacity();
+//void FullChargeCapacity();
+float AverageCurrent();
+float StandbyCurrent();
+float MaxLoadCurrent();
+float AveragePower();
+//void StateOfCharge();
+float InternalTemperature();
+//void StateOfHealth();
+//void RemainingCapacityUnfiltered();
+//void RemainingCapacityFiltered();
+//void FullChargeCapacityUnfiltered();
+//void FullChargeCapacityFiltered();
+//void StateOfChargeUnfiltered();
 
 #endif

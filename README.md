@@ -1,14 +1,13 @@
-HMC5883L -Triple Axis Magnetometer
-==================================
+BQ27441 - Fuel gauge (i2c)
+==========================
 
 This is a reference workbench for `ehwe`
 ([project link](https://github.com/helsinova/ehwe))
 
-Documentation for a lab using this code:
-[`ehwe` wiki-lab](https://github.com/helsinova/ehwe/wiki/HMC5883L-EHWE-BusPirate-lab)
+*BIG FAT NOTE:* BQ27441 utilizes i2c clock-streching which Bus Pirate
+doesn't handle. A work-around is to run the clock at very low speed. There's
+however no guarantee that the interface will work.
 
-**Note:** This code uses the *STM32F10x_StdPeriph_Lib (V3.5.0)* API. I.e. it
-should in *principle* be transparent to *STM32 SoC:s*.
 
 ## How to use this git
 
