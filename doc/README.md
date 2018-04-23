@@ -1,5 +1,6 @@
-BQ27441-G1 documentation
-========================
+INA233 documentation
+====================
 
-* Data-sheet: [bq27441-g1.pdf]()
-* TRM: [sluuac9a.pdf]()
+* TRM: [ina233.pdf]()
+* EVA: [sbou187.pdf]()
+
