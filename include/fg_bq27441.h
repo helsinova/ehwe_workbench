@@ -22,6 +22,9 @@
 #ifndef fg_bq27441_h
 #define fg_bq27441_h
 
+void fuelguage_init(void);
+void fuelguage_deinit(void);
+
 //void Control();
 float Temperature();
 float Voltage();

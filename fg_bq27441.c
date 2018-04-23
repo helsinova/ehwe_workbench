@@ -20,10 +20,23 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include <ctype.h>
+#include <stddef.h>
 
-#include <ehwe.h>
+#include <ehwe_i2c_device.h>
 #include <fg_bq27441.h>
 #include "fg_bq27441_device.h"
+
+i2c_device_hndl i2c_device = NULL;
+
+void fuelguage_init(void)
+{
+    i2c_device = i2c_device_open(I2C1, BQ27441_ADDR);
+}
+
+void fuelguage_deinit(void)
+{
+    i2c_device_close(i2c_device);
+}
 
 void Control()
 {
@@ -31,24 +44,12 @@ void Control()
 
 float Temperature()
 {
-    uint8_t data[2] = { 0 };
-
-    i2c_write(I2C1, BQ27441_ADDR, (uint8_t[]) {
-              COMMAND_TEMP}, 1, 0);
-
-    i2c_read(I2C1, BQ27441_ADDR, data, sizeof(data));
-    return (((data[1] << 8) + data[0]) / 100.0);
+    return (i2c_device_read_uint16(i2c_device, COMMAND_TEMP) / 10.0) - 273.15;
 }
 
 float Voltage()
 {
-    uint8_t data[2] = { 0 };
-
-    i2c_write(I2C1, BQ27441_ADDR, (uint8_t[]) {
-              COMMAND_VOLTAGE}, 1, 0);
-
-    i2c_read(I2C1, BQ27441_ADDR, data, sizeof(data));
-    return (((data[1] << 8) + data[0]) / 1000.0);
+    return i2c_device_read_uint16(i2c_device, COMMAND_VOLTAGE) / 1000.0;
 }
 
 void Flags()
@@ -73,46 +74,22 @@ void FullChargeCapacity()
 
 float AverageCurrent()
 {
-    uint8_t data[2] = { 0 };
-
-    i2c_write(I2C1, BQ27441_ADDR, (uint8_t[]) {
-              COMMAND_AVG_CURRENT}, 1, 0);
-
-    i2c_read(I2C1, BQ27441_ADDR, data, sizeof(data));
-    return (((data[1] << 8) + data[0]) / 1000.0);
+    return i2c_device_read_uint16(i2c_device, COMMAND_AVG_CURRENT) / 1000.0;
 }
 
 float StandbyCurrent()
 {
-    uint8_t data[2] = { 0 };
-
-    i2c_write(I2C1, BQ27441_ADDR, (uint8_t[]) {
-              COMMAND_STDBY_CURRENT}, 1, 0);
-
-    i2c_read(I2C1, BQ27441_ADDR, data, sizeof(data));
-    return (((data[1] << 8) + data[0]) / 1000.0);
+    return i2c_device_read_uint16(i2c_device, COMMAND_STDBY_CURRENT) / 1000.0;
 }
 
 float MaxLoadCurrent()
 {
-    uint8_t data[2] = { 0 };
-
-    i2c_write(I2C1, BQ27441_ADDR, (uint8_t[]) {
-              COMMAND_MAX_CURRENT}, 1, 0);
-
-    i2c_read(I2C1, BQ27441_ADDR, data, sizeof(data));
-    return (((data[1] << 8) + data[0]) / 1000.0);
+    return i2c_device_read_uint16(i2c_device, COMMAND_MAX_CURRENT) / 1000.0;
 }
 
 float AveragePower()
 {
-    uint8_t data[2] = { 0 };
-
-    i2c_write(I2C1, BQ27441_ADDR, (uint8_t[]) {
-              COMMAND_AVG_POWER}, 1, 0);
-
-    i2c_read(I2C1, BQ27441_ADDR, data, sizeof(data));
-    return (((data[1] << 8) + data[0]) / 1000.0);
+    return i2c_device_read_uint16(i2c_device, COMMAND_AVG_POWER) / 1000.0;
 }
 
 void StateOfCharge()
@@ -121,13 +98,8 @@ void StateOfCharge()
 
 float InternalTemperature()
 {
-    uint8_t data[2] = { 0 };
-
-    i2c_write(I2C1, BQ27441_ADDR, (uint8_t[]) {
-              COMMAND_INT_TEMP}, 1, 0);
-
-    i2c_read(I2C1, BQ27441_ADDR, data, sizeof(data));
-    return (((data[1] << 8) + data[0]) / 100.0);
+    return (i2c_device_read_uint16(i2c_device, COMMAND_INT_TEMP) / 10.0) -
+        273.15;
 }
 
 void StateOfHealth()

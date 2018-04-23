@@ -74,11 +74,15 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
+    fuelguage_init();
+
     for (i = 0; i < x; i++) {
         PRINTF("%f;%f;%f;%f;%f;%f;%f\n", Voltage(), Temperature(),
                AverageCurrent(), StandbyCurrent(),
                MaxLoadCurrent(), AveragePower(), InternalTemperature());
         FFLUSH(stdout);
     }
+
+    fuelguage_deinit();
     return 0;
 }
