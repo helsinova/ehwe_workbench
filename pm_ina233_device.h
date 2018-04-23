@@ -1,6 +1,4 @@
 /***************************************************************************
- *   Copyright (C) 2015 by Michael Ambrus                                  *
- *   ambrmi09@gmail.com                                                    *
  *   Copyright (C) 2018 by Michael Ambrus                                  *
  *   michael@helsinova.se                                                  *
  *                                                                         *
@@ -19,31 +17,16 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef fg_bq27441_h
-#define fg_bq27441_h
+#ifndef pm_ina233_device_h
+#define pm_ina233_device_h
 
-void fuelguage_init(void);
-void fuelguage_deinit(void);
+/* Device address (7-bit) */
+/* Note: 7.5.6.1 Serial Bus Address */
+#define INA233_ADDR 0x80
 
-//void Control();
-float Temperature();
-float Voltage();
-//void Flags();
-//void NominalAvailableCapacity();
-//void FullAvailableCapacity();
-//void RemainingCapacity();
-//void FullChargeCapacity();
-float AverageCurrent();
-float StandbyCurrent();
-float MaxLoadCurrent();
-float AveragePower();
-//void StateOfCharge();
-float InternalTemperature();
-//void StateOfHealth();
-//void RemainingCapacityUnfiltered();
-//void RemainingCapacityFiltered();
-//void FullChargeCapacityUnfiltered();
-//void FullChargeCapacityFiltered();
-//void StateOfChargeUnfiltered();
+/*
+ * Commands
+ */
+#define READ_VIN         				0x88 /* Voltage VBUS*/
 
 #endif

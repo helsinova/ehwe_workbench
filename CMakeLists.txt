@@ -16,7 +16,7 @@ option(HAS_PRINTF
 
 set(LIBEMBEDDED_SOURCE
   main.c
-  fg_bq27441.c
+  pm_ina233.c
 )
 
 # configure a header file to pass some of the CMake settings

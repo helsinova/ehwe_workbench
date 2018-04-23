@@ -1,13 +1,8 @@
-BQ27441 - Fuel gauge (i2c)
-==========================
+INA233 - Current/Power monitor (i2c)
+====================================
 
 This is a reference workbench for `ehwe`
 ([project link](https://github.com/helsinova/ehwe))
-
-*BIG FAT NOTE:* BQ27441 utilizes i2c clock-streching which Bus Pirate
-doesn't handle. A work-around is to run the clock at very low speed. There's
-however no guarantee that the interface will work.
-
 
 ## How to use this git
 

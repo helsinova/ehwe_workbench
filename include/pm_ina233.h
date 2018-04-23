@@ -19,109 +19,31 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <ctype.h>
-#include <stddef.h>
+#ifndef fg_bq27441_h
+#define fg_bq27441_h
 
-#include <ehwe_i2c_device.h>
-#include <fg_bq27441.h>
-#include "fg_bq27441_device.h"
+void pm_init(void);
+void pm_deinit(void);
 
-i2c_device_hndl i2c_device = NULL;
+//void Control();
+//void Temperature();
+float Voltage();
+//void Flags();
+//void NominalAvailableCapacity();
+//void FullAvailableCapacity();
+//void RemainingCapacity();
+//void FullChargeCapacity();
+//void AverageCurrent();
+//void StandbyCurrent();
+//void MaxLoadCurrent();
+//void AveragePower();
+//void StateOfCharge();
+//void InternalTemperature();
+//void StateOfHealth();
+//void RemainingCapacityUnfiltered();
+//void RemainingCapacityFiltered();
+//void FullChargeCapacityUnfiltered();
+//void FullChargeCapacityFiltered();
+//void StateOfChargeUnfiltered();
 
-void fuelguage_init(void)
-{
-    i2c_device = i2c_device_open(I2C1, BQ27441_ADDR);
-}
-
-void fuelguage_deinit(void)
-{
-    i2c_device_close(i2c_device);
-}
-
-void Control()
-{
-}
-
-float Temperature()
-{
-    return (i2c_device_read_uint16(i2c_device, COMMAND_TEMP) / 10.0) - 273.15;
-}
-
-float Voltage()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_VOLTAGE) / 1000.0;
-}
-
-void Flags()
-{
-}
-
-void NominalAvailableCapacity()
-{
-}
-
-void FullAvailableCapacity()
-{
-}
-
-void RemainingCapacity()
-{
-}
-
-void FullChargeCapacity()
-{
-}
-
-float AverageCurrent()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_AVG_CURRENT) / 1000.0;
-}
-
-float StandbyCurrent()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_STDBY_CURRENT) / 1000.0;
-}
-
-float MaxLoadCurrent()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_MAX_CURRENT) / 1000.0;
-}
-
-float AveragePower()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_AVG_POWER) / 1000.0;
-}
-
-void StateOfCharge()
-{
-}
-
-float InternalTemperature()
-{
-    return (i2c_device_read_uint16(i2c_device, COMMAND_INT_TEMP) / 10.0) -
-        273.15;
-}
-
-void StateOfHealth()
-{
-}
-
-void RemainingCapacityUnfiltered()
-{
-}
-
-void RemainingCapacityFiltered()
-{
-}
-
-void FullChargeCapacityUnfiltered()
-{
-}
-
-void FullChargeCapacityFiltered()
-{
-}
-
-void StateOfChargeUnfiltered()
-{
-}
+#endif

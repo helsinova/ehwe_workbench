@@ -1,4 +1,6 @@
 /***************************************************************************
+ *   Copyright (C) 2015 by Michael Ambrus                                  *
+ *   ambrmi09@gmail.com                                                    *
  *   Copyright (C) 2018 by Michael Ambrus                                  *
  *   michael@helsinova.se                                                  *
  *                                                                         *
@@ -17,70 +19,102 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-/*
- * Test program: i2c  fuel-gauge  BQ27441
- */
-
 #include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <math.h>
+#include <stddef.h>
 
+#include <ehwe_i2c_device.h>
 #include <pm_ina233.h>
+#include "pm_ina233_device.h"
 
-#ifdef EHWE
-#include "embedded_config.h"
-#define main embedded_main
-#endif
+i2c_device_hndl i2c_device = NULL;
 
-#define DEFLT_X     100
-
-#ifdef HAS_PRINTF
-#define PRINTF printf
-#define FFLUSH fflush
-#else
-#define PRINTF(...) ((void)(0))
-#define FFLUSH(...) ((void)(0))
-#endif
-
-int main(int argc, char **argv)
+void pm_init(void)
 {
-    int c, i, x = DEFLT_X;
+    i2c_device = i2c_device_open(I2C1, INA233_ADDR);
+}
 
-    opterr = 0;
-    while ((c = getopt(argc, argv, "x:")) != -1) {
-        switch (c) {
-            case 'x':
-                x = atoi(optarg);
-                break;
-            case '?':
-                if (optopt == 'x')
-                    fprintf(stderr, "Option -%c requires an argument.\n",
-                            optopt);
-                else if (isprint(optopt))
-                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-                else
-                    fprintf(stderr,
-                            "Unknown option character `\\x%x'.\n", optopt);
-                return 1;
-            default:
-                abort();
-        }
-    }
+void pm_deinit(void)
+{
+    i2c_device_close(i2c_device);
+}
 
-    if (optind < argc) {
-        //somevar = argv[optind];
-    }
+void Control()
+{
+}
 
-    pm_init();
+void Temperature()
+{
+}
 
-    for (i = 0; i < x; i++) {
-        PRINTF("%f\n", Voltage());
-        FFLUSH(stdout);
-    }
+float Voltage()
+{
+    return i2c_device_read_uint16(i2c_device, READ_VIN) / 1000.0;
+}
 
-    pm_deinit();
-    return 0;
+void Flags()
+{
+}
+
+void NominalAvailableCapacity()
+{
+}
+
+void FullAvailableCapacity()
+{
+}
+
+void RemainingCapacity()
+{
+}
+
+void FullChargeCapacity()
+{
+}
+
+void AverageCurrent()
+{
+}
+
+void StandbyCurrent()
+{
+}
+
+void MaxLoadCurrent()
+{
+}
+
+void AveragePower()
+{
+}
+
+void StateOfCharge()
+{
+}
+
+void InternalTemperature()
+{
+}
+
+void StateOfHealth()
+{
+}
+
+void RemainingCapacityUnfiltered()
+{
+}
+
+void RemainingCapacityFiltered()
+{
+}
+
+void FullChargeCapacityUnfiltered()
+{
+}
+
+void FullChargeCapacityFiltered()
+{
+}
+
+void StateOfChargeUnfiltered()
+{
 }
