@@ -22,7 +22,7 @@
 
 /* Device address (7-bit) */
 /* Note: 7.5.6.1 Serial Bus Address */
-#define INA233_ADDR 0x80
+#define INA233_ADDR 0x40
 
 /*
  * Commands
