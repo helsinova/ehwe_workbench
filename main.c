@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c  fuel-gauge  BQ27441
+ * Test program: i2c  Voltage/Apmp/Power INA233
  */
 
 #include <ctype.h>
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     pm_init();
 
     for (i = 0; i < x; i++) {
-        PRINTF("%f\n", Voltage());
+        PRINTF("%f\n", read_vin());
         FFLUSH(stdout);
     }
 

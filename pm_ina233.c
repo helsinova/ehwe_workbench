@@ -26,11 +26,21 @@
 #include <pm_ina233.h>
 #include "pm_ina233_device.h"
 
+/* Change the following according to HW-design */
+#define  R_SHUNT             (1.0E-3)
+#define  CAL                 (1.0)
+
+/* Constants and derived constants */
+#define  VOLTAGE_LSB         (1.25E-3)
+#define  VOLTAGE_SHUNT_LSB   (2.5E-6)
+#define  CURRENT_LSB         (5.12E-3 / (CAL*R_SHUNT))
+#define  POWER_LSB           (CURRENT_LSB / 25)
+
 i2c_device_hndl i2c_device = NULL;
 
 void pm_init(void)
 {
-    i2c_device = i2c_device_open(I2C1, INA233_ADDR);
+    i2c_device = i2c_device_open(I2C1, ADDR_INA233);
 }
 
 void pm_deinit(void)
@@ -38,83 +48,136 @@ void pm_deinit(void)
     i2c_device_close(i2c_device);
 }
 
-void Control()
+void clear_faults()
 {
 }
 
-void Temperature()
+void restore_default_all()
 {
 }
 
-float Voltage()
-{
-    return i2c_device_read_uint16(i2c_device, READ_VIN) / 1000.0;
-}
-
-void Flags()
+void capability()
 {
 }
 
-void NominalAvailableCapacity()
+void iout_oc_warn_limit()
 {
 }
 
-void FullAvailableCapacity()
+void vin_ov_warn_limit()
 {
 }
 
-void RemainingCapacity()
+void vin_uv_warn_limit()
 {
 }
 
-void FullChargeCapacity()
+void pin_op_warn_limit()
 {
 }
 
-void AverageCurrent()
+void status()
 {
 }
 
-void StandbyCurrent()
+void status_word()
 {
 }
 
-void MaxLoadCurrent()
+void status_iout()
 {
 }
 
-void AveragePower()
+void status_input()
 {
 }
 
-void StateOfCharge()
+void status_cml()
 {
 }
 
-void InternalTemperature()
+void status_mfr_specific()
 {
 }
 
-void StateOfHealth()
+void read_ein()
 {
 }
 
-void RemainingCapacityUnfiltered()
+double read_vin()
+{
+    uint16_t tvoltage;
+
+    tvoltage = i2c_device_read_uint16(i2c_device, CMD_READ_VIN);
+
+    /* Handle undocumented special case */
+    if (tvoltage == 0xFF00) {
+        tvoltage = 0;
+    }
+
+    return ((int16_t)tvoltage) * VOLTAGE_LSB;
+}
+
+void read_vout()
 {
 }
 
-void RemainingCapacityFiltered()
+void read_iout()
 {
 }
 
-void FullChargeCapacityUnfiltered()
+void read_pout()
 {
 }
 
-void FullChargeCapacityFiltered()
+void read_pin()
 {
 }
 
-void StateOfChargeUnfiltered()
+void mfr_id()
+{
+}
+
+void mfr_model()
+{
+}
+
+void mfr_revision()
+{
+}
+
+void mfr_adc_config()
+{
+}
+
+void mfr_read_vshunt()
+{
+}
+
+void mfr_alert_mask()
+{
+}
+
+void mfr_calibration()
+{
+}
+
+void mfr_device_config()
+{
+}
+
+void clear_ein()
+{
+}
+
+void ti_mfr_id()
+{
+}
+
+void ti_mfr_model()
+{
+}
+
+void ti_mfr_revision()
 {
 }
