@@ -28,6 +28,46 @@
 void pm_init(void);
 void pm_deinit(void);
 
+/* Register layouts as bit-field struct:s */
+
+/* Note regarding Field overlapping byte boundary:
+ *
+ * This should be OK on Android/ARM now as warning: "note: offset of packed
+ * bit-field ‘VBUSCT’ has changed in GCC 4.4" means layout error is now
+ * fixed.
+ */
+#if BYTES_BIG_ENDIAN
+typedef union {
+    struct {
+        uint8_t __not_used:4;
+        uint8_t AVG:3;          /* Averaging */
+        uint8_t VBUSCT:3;       /* Bus voltage conversion time */
+        uint8_t VSHCT:3;        /* Shunt voltage conversion time */
+        uint8_t shunt:1;        /* Operation modes (3) */
+        uint8_t bus:1;
+        uint8_t continuous:1;
+    } __attribute__ ((packed));
+    uint16_t raw_val;
+    uint8_t barray[2];
+} reg_mfr_adc_config;
+
+#else
+typedef union {
+    struct {
+        uint8_t continuous:1;
+        uint8_t bus:1;
+        uint8_t shunt:1;
+        uint8_t VSHCT:3;
+        uint8_t VBUSCT:3;
+        uint8_t AVG:3;
+        uint8_t __not_used:4;
+    } __attribute__ ((packed));
+    uint16_t raw_val;
+    uint8_t barray[2];
+} reg_mfr_adc_config;
+
+#endif
+
 //void clear_faults();
 //void restore_default_all();
 uint8_t capability();
@@ -51,8 +91,8 @@ double read_vin();
 uint16_t mfr_id();
 void mfr_model(char model[6]);
 uint16_t mfr_revision();
-uint16_t get_mfr_adc_config();
-void set_mfr_adc_config(uint16_t);
+reg_mfr_adc_config get_mfr_adc_config();
+void set_mfr_adc_config(reg_mfr_adc_config);
 //void mfr_read_vshunt();
 //void mfr_alert_mask();
 //void mfr_calibration();

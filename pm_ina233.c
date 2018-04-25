@@ -47,6 +47,8 @@ void pm_deinit(void)
     i2c_device_close(i2c_device);
 }
 
+/* Device commands */
+
 void clear_faults()
 {
 }
@@ -149,14 +151,17 @@ uint16_t mfr_revision()
     return i2c_device_read_uint16(i2c_device, CMD_MFR_REVISION);
 }
 
-uint16_t get_mfr_adc_config()
+reg_mfr_adc_config get_mfr_adc_config()
 {
-    return i2c_device_read_uint16(i2c_device, CMD_MFR_ADC_CONFIG);
+    uint16_t tmp;
+    tmp = i2c_device_read_uint16(i2c_device, CMD_MFR_ADC_CONFIG);
+
+    return (reg_mfr_adc_config) tmp;
 }
 
-void set_mfr_adc_config(uint16_t data)
+void set_mfr_adc_config(reg_mfr_adc_config config)
 {
-    i2c_device_write_uint16(i2c_device, CMD_MFR_ADC_CONFIG, data);
+    i2c_device_write_uint16(i2c_device, CMD_MFR_ADC_CONFIG, config.raw_val);
 }
 
 void mfr_read_vshunt()
