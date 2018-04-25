@@ -48,6 +48,7 @@
 int main(int argc, char **argv)
 {
     int c, i, x = DEFLT_X;
+    char bbuf[32];
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
@@ -75,6 +76,17 @@ int main(int argc, char **argv)
     }
 
     pm_init();
+
+    mfr_model(bbuf);
+    fprintf(stderr, "Fuel guage chip model=[%s], capabilities=[0x%01X]\n", bbuf,
+            capability());
+    fprintf(stderr, "Manufaturer ID=[0x%04X], revision=[0x%04X]\n", mfr_id(),
+            mfr_revision());
+    fprintf
+        (stderr,
+         "TI manufaturer ID=[0x%04X], TI model=[0x%04X], TI revision=[0x%04X]\n",
+         ti_mfr_id(), ti_mfr_revision(), ti_mfr_revision());
+    fprintf(stderr, "ADC config=[0x%04X]\n", get_mfr_adc_config());
 
     for (i = 0; i < x; i++) {
         PRINTF("%f\n", read_vin());

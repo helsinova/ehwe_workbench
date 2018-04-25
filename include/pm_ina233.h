@@ -22,12 +22,15 @@
 #ifndef fg_bq27441_h
 #define fg_bq27441_h
 
+#include <stdint.h>
+#include <ctype.h>
+
 void pm_init(void);
 void pm_deinit(void);
 
 //void clear_faults();
 //void restore_default_all();
-//void capability();
+uint8_t capability();
 //void iout_oc_warn_limit();
 //void vin_ov_warn_limit();
 //void vin_uv_warn_limit();
@@ -45,17 +48,18 @@ double read_vin();
 //void read_iout();
 //void read_pout();
 //void read_pin();
-//void mfr_id();
-//void mfr_model();
-//void mfr_revision();
-//void mfr_adc_config();
+uint16_t mfr_id();
+void mfr_model(char model[6]);
+uint16_t mfr_revision();
+uint16_t get_mfr_adc_config();
+void set_mfr_adc_config(uint16_t);
 //void mfr_read_vshunt();
 //void mfr_alert_mask();
 //void mfr_calibration();
 //void mfr_device_config();
 //void clear_ein();
-//void ti_mfr_id();
-//void ti_mfr_model();
-//void ti_mfr_revision();
+int16_t ti_mfr_id();
+int16_t ti_mfr_model();
+int16_t ti_mfr_revision();
 
 #endif

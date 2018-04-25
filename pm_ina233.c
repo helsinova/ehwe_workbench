@@ -19,7 +19,6 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <ctype.h>
 #include <stddef.h>
 
 #include <ehwe_i2c_device.h>
@@ -56,8 +55,9 @@ void restore_default_all()
 {
 }
 
-void capability()
+uint8_t capability()
 {
+    return i2c_device_read_uint8(i2c_device, CMD_CAPABILITY);
 }
 
 void iout_oc_warn_limit()
@@ -134,20 +134,29 @@ void read_pin()
 {
 }
 
-void mfr_id()
+uint16_t mfr_id()
 {
+    return i2c_device_read_uint16(i2c_device, CMD_MFR_ID);
 }
 
-void mfr_model()
+void mfr_model(char model[6])
 {
+    i2c_device_read_bytes(i2c_device, CMD_MFR_MODEL, (uint8_t *)model, 6);
 }
 
-void mfr_revision()
+uint16_t mfr_revision()
 {
+    return i2c_device_read_uint16(i2c_device, CMD_MFR_REVISION);
 }
 
-void mfr_adc_config()
+uint16_t get_mfr_adc_config()
 {
+    return i2c_device_read_uint16(i2c_device, CMD_MFR_ADC_CONFIG);
+}
+
+void set_mfr_adc_config(uint16_t data)
+{
+    i2c_device_write_uint16(i2c_device, CMD_MFR_ADC_CONFIG, data);
 }
 
 void mfr_read_vshunt()
@@ -170,14 +179,17 @@ void clear_ein()
 {
 }
 
-void ti_mfr_id()
+int16_t ti_mfr_id()
 {
+    return i2c_device_read_uint16(i2c_device, CMD_TI_MFR_ID);
 }
 
-void ti_mfr_model()
+int16_t ti_mfr_model()
 {
+    return i2c_device_read_uint16(i2c_device, CMD_TI_MFR_MODEL);
 }
 
-void ti_mfr_revision()
+int16_t ti_mfr_revision()
 {
+    return i2c_device_read_uint16(i2c_device, CMD_TI_MFR_REVISION);
 }
