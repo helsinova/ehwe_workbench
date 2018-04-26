@@ -34,7 +34,9 @@ void pm_deinit(void);
  *
  * This should be OK on Android/ARM now as warning: "note: offset of packed
  * bit-field ‘VBUSCT’ has changed in GCC 4.4" means layout error is now
- * fixed.
+ * fixed. See: https://gcc.gnu.org/gcc-4.4/changes.html
+ *
+ * I.e. add to build options: -Wno-packed-bitfield-compat
  */
 #if BYTES_BIG_ENDIAN
 typedef union {
@@ -68,7 +70,7 @@ typedef union {
 
 #endif
 
-//void clear_faults();
+void clear_faults();
 //void restore_default_all();
 uint8_t capability();
 //void iout_oc_warn_limit();
@@ -90,7 +92,7 @@ double read_vin();
 //void read_pin();
 uint16_t mfr_id();
 void mfr_model(char model[6]);
-uint16_t mfr_revision();
+uint8_t mfr_revision();
 reg_mfr_adc_config get_mfr_adc_config();
 void set_mfr_adc_config(reg_mfr_adc_config);
 //void mfr_read_vshunt();

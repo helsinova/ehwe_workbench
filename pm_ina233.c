@@ -20,6 +20,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include <stddef.h>
+#include <string.h>
 
 #include <ehwe_i2c_device.h>
 #include <pm_ina233.h>
@@ -102,6 +103,7 @@ void status_mfr_specific()
 {
 }
 
+/* Note: Block read */
 void read_ein()
 {
 }
@@ -136,19 +138,28 @@ void read_pin()
 {
 }
 
+/* Note: Block read */
 uint16_t mfr_id()
 {
-    return i2c_device_read_uint16(i2c_device, CMD_MFR_ID);
+    uint8_t buf[3] = { 0 };
+
+    i2c_device_read_bytes(i2c_device, CMD_MFR_MODEL, buf, sizeof(buf));
+
+    return *((uint16_t *)(&buf[1]));
 }
 
+/* Note: Block read */
 void mfr_model(char model[6])
 {
-    i2c_device_read_bytes(i2c_device, CMD_MFR_MODEL, (uint8_t *)model, 6);
+    uint8_t buf[7] = { 0 };
+
+    i2c_device_read_bytes(i2c_device, CMD_MFR_MODEL, buf, sizeof(buf));
+    memcpy(model, &buf[1], 6);
 }
 
-uint16_t mfr_revision()
+uint8_t mfr_revision()
 {
-    return i2c_device_read_uint16(i2c_device, CMD_MFR_REVISION);
+    return i2c_device_read_uint8(i2c_device, CMD_MFR_REVISION);
 }
 
 reg_mfr_adc_config get_mfr_adc_config()

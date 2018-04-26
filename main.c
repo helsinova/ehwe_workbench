@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     mfr_model(bbuf);
     fprintf(stderr, "Fuel guage chip model=[%s], capabilities=[0x%01X]\n", bbuf,
             capability());
-    fprintf(stderr, "Manufaturer ID=[0x%04X], revision=[0x%04X]\n", mfr_id(),
+    fprintf(stderr, "Manufaturer ID=[0x%04X], revision=[0x%02X]\n", mfr_id(),
             mfr_revision());
     fprintf
         (stderr,
