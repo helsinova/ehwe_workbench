@@ -298,13 +298,16 @@ void set_status_input(reg_status_input status);
 void set_status_cml(reg_status_input status);
 void set_status_mfr_specific(reg_status_mfr_specific status);
 
-//void read_ein();
 double read_vin();
-//void read_in();
-//void read_vout();
-//void read_iout();
-//void read_pout();
-//void read_pin();
+double read_iin();
+double read_pin();
+
+double read_vout();
+double read_iout();
+double read_pout();
+
+//void read_ein();
+
 uint16_t mfr_id();
 void mfr_model(char model[6]);
 uint8_t mfr_revision();

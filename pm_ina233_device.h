@@ -66,7 +66,7 @@
                                            0x00, 0x00, 0x00, 0x00} */
 #define CMD_READ_VIN            0x88    /* Retrieves t0xe measurement for t0xe
                                            VBUS voltage R 2 0x0000 */
-#define CMD_READ_IN             0x89    /* Retrieves t0xe input current
+#define CMD_READ_IIN            0x89    /* Retrieves t0xe input current
                                            measurement, supports bot0x positive
                                            and negative currents R 2 0x0000 */
 #define CMD_READ_VOUT           0x8B    /* Mirrors READ_VIN R 2 0x0000 */

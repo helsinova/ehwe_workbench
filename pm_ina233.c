@@ -36,6 +36,11 @@
 #define  CURRENT_LSB         (5.12E-3 / (CAL*R_SHUNT))
 #define  POWER_LSB           (CURRENT_LSB / 25)
 
+/* Convert internal (ADC) values to SI-units */
+#define ADC2VOLTAGE( V ) 	(((int16_t) V ) * VOLTAGE_LSB)
+#define ADC2CURRENT( I ) 	(((int16_t) I ) * CURRENT_LSB)
+#define ADC2POWER( P ) 		(((int16_t) P ) * POWER_LSB)
+
 i2c_device_hndl i2c_device = NULL;
 
 void pm_init(void)
@@ -152,23 +157,41 @@ double read_vin()
         tvoltage = 0;
     }
 
-    return ((int16_t)tvoltage) * VOLTAGE_LSB;
+    return ADC2VOLTAGE(tvoltage);
 }
 
-void read_vout()
+double read_vout()
 {
+    uint16_t tvoltage;
+
+    tvoltage = i2c_device_read_uint16(i2c_device, CMD_READ_VOUT);
+
+    /* Handle undocumented special case */
+    if (tvoltage == 0xFF00) {
+        tvoltage = 0;
+    }
+
+    return ADC2VOLTAGE(tvoltage);
 }
 
-void read_iout()
+double read_iin()
 {
+    return ADC2CURRENT(i2c_device_read_uint16(i2c_device, CMD_READ_IIN));
 }
 
-void read_pout()
+double read_iout()
 {
+    return ADC2CURRENT(i2c_device_read_uint16(i2c_device, CMD_READ_IOUT));
 }
 
-void read_pin()
+double read_pout()
 {
+    return ADC2POWER(i2c_device_read_uint16(i2c_device, CMD_READ_POUT));
+}
+
+double read_pin()
+{
+    return ADC2POWER(i2c_device_read_uint16(i2c_device, CMD_READ_PIN));
 }
 
 /* Note: Block read */

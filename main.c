@@ -95,6 +95,11 @@ int main(int argc, char **argv)
             get_status_iout().raw_val, get_status_input().raw_val,
             get_status_cml().raw_val, get_status_mfr_specific().raw_val);
 
+    fprintf(stderr, "VIP in: V=%f I=%f P=%f\n",
+            read_vin(), read_iin(), read_pin());
+    fprintf(stderr, "VIP out: V=%f I=%f P=%f\n",
+            read_vout(), read_iout(), read_pout());
+
     adc_config = get_mfr_adc_config();
     fprintf(stderr, "ADC config=[0x%04X]\n", adc_config.raw_val);
     fprintf(stderr, "  AVG=[%d]\n", adc_config.AVG);
@@ -119,7 +124,7 @@ int main(int argc, char **argv)
     restore_default_all();
 
     for (i = 0; i < x; i++) {
-        PRINTF("%f\n", read_vin());
+        PRINTF("%f %f %f\n", read_vin(), read_iin(), read_pin());
         FFLUSH(stdout);
     }
 
