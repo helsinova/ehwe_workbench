@@ -87,6 +87,8 @@ int main(int argc, char **argv)
         (stderr,
          "TI manufaturer ID=[0x%04X], TI model=[0x%04X], TI revision=[0x%04X]\n",
          ti_mfr_id(), ti_mfr_revision(), ti_mfr_revision());
+    fprintf(stderr, "Status=[0x%02X], Status Word=[0x%04X]\n", status().raw_val,
+            status_word().raw_val);
 
     adc_config = get_mfr_adc_config();
     fprintf(stderr, "ADC config=[0x%04X]\n", adc_config.raw_val);
@@ -108,6 +110,8 @@ int main(int argc, char **argv)
     fprintf(stderr, "  MODE.shunt=[%d]\n", adc_config.shunt);
     fprintf(stderr, "  MODE.bus=[%d]\n", adc_config.bus);
     fprintf(stderr, "  MODE.continuous=[%d]\n", adc_config.continuous);
+    clear_faults();
+    restore_default_all();
 
     for (i = 0; i < x; i++) {
         PRINTF("%f\n", read_vin());

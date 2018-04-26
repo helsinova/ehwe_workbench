@@ -39,6 +39,45 @@ void pm_deinit(void);
  * I.e. add to build options: -Wno-packed-bitfield-compat
  */
 #if BYTES_BIG_ENDIAN
+
+typedef union {
+    struct {
+        uint8_t BUSY:1;         /* Not supported 0 */
+        uint8_t OFF:1;          /* Not supported 0 */
+        uint8_t VOUT_OC:1;      /* Not supported 0 */
+        uint8_t IOUT_OC:1;      /* Not supported 0 */
+        uint8_t VIN_UV:1;       /* Not supported 0 */
+        uint8_t TEMPERATURE:1;  /* Not supported 0 */
+        uint8_t CML:1;          /* A communication fault has occurred 0 */
+        uint8_t NONE_OF_THE_ABOVE:1;    /* A fault or warning not listed in bits[7:1] has occurred */
+    } __attribute__ ((packed));
+    uint8_t raw_val;
+} reg_status_byte;
+
+typedef union {
+    struct {
+        uint8_t VOUT:1;         /* Not supported 0 */
+        uint8_t IOUT_POUT:1;    /* An output current or power warning has occurred 0 */
+        uint8_t INPUT:1;        /* An input voltage, current, or power warning has occurred 0 */
+        uint8_t MFR:1;          /* A manufacturer-specific fault or warning has occurred 1 */
+        uint8_t POWER_GOOD:1;   /* Not supported 0 */
+        uint8_t FANS:1;         /* Not supported 0 */
+        uint8_t OTHER:1;        /* Not supported 0 */
+        uint8_t UNKNOWN:1;      /* Not supported 0 */
+
+        uint8_t BUSY:1;         /* Not supported 0 */
+        uint8_t OFF:1;          /* Not supported 0 */
+        uint8_t VOUT_OC:1;      /* Not supported 0 */
+        uint8_t IOUT_OC:1;      /* Not supported 0 */
+        uint8_t VIN_UV:1;       /* Not supported 0 */
+        uint8_t TEMPERATURE:1;  /* Not supported 0 */
+        uint8_t CML:1;          /* A communication fault has occurred 0 */
+        uint8_t NONE_OF_THE_ABOVE:1;    /* A fault or warning not listed in bits[7:1] has occurred */
+    } __attribute__ ((packed));
+    uint16_t raw_val;
+    uint8_t barray[2];
+} reg_status_word;
+
 typedef union {
     struct {
         uint8_t __not_used:4;
@@ -56,6 +95,44 @@ typedef union {
 #else
 typedef union {
     struct {
+        uint8_t NONE_OF_THE_ABOVE:1;
+        uint8_t CML:1;
+        uint8_t TEMPERATURE:1;
+        uint8_t VIN_UV:1;
+        uint8_t IOUT_OC:1;
+        uint8_t VOUT_OC:1;
+        uint8_t OFF:1;
+        uint8_t BUSY:1;
+    } __attribute__ ((packed));
+    uint8_t raw_val;
+} reg_status_byte;
+
+typedef union {
+    struct {
+        uint8_t NONE_OF_THE_ABOVE:1;
+        uint8_t CML:1;
+        uint8_t TEMPERATURE:1;
+        uint8_t VIN_UV:1;
+        uint8_t IOUT_OC:1;
+        uint8_t VOUT_OC:1;
+        uint8_t OFF:1;
+        uint8_t BUSY:1;
+
+        uint8_t UNKNOWN:1;
+        uint8_t OTHER:1;
+        uint8_t FANS:1;
+        uint8_t POWER_GOOD:1;
+        uint8_t MFR:1;
+        uint8_t INPUT:1;
+        uint8_t IOUT_POUT:1;
+        uint8_t VOUT:1;
+    } __attribute__ ((packed));
+    uint16_t raw_val;
+    uint8_t barray[2];
+} reg_status_word;
+
+typedef union {
+    struct {
         uint8_t continuous:1;
         uint8_t bus:1;
         uint8_t shunt:1;
@@ -71,17 +148,21 @@ typedef union {
 #endif
 
 void clear_faults();
-//void restore_default_all();
+void restore_default_all();
 uint8_t capability();
+
 //void iout_oc_warn_limit();
 //void vin_ov_warn_limit();
 //void vin_uv_warn_limit();
 //void pin_op_warn_limit();
-//void status();
-//void status_word();
+
+reg_status_byte status();
+reg_status_word status_word();
+
 //void status_iout();
 //void status_input();
 //void status_cml();
+
 //void status_mfr_specific();
 //void read_ein();
 double read_vin();

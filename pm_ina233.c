@@ -52,10 +52,12 @@ void pm_deinit(void)
 
 void clear_faults()
 {
+    i2c_device_write_bytes(i2c_device, CMD_CLEAR_FAULTS, NULL, 0);
 }
 
 void restore_default_all()
 {
+    i2c_device_write_bytes(i2c_device, CMD_RESTORE_DEFAULT_ALL, NULL, 0);
 }
 
 uint8_t capability()
@@ -79,12 +81,15 @@ void pin_op_warn_limit()
 {
 }
 
-void status()
+reg_status_byte status_byte()
 {
+    return (reg_status_byte) i2c_device_read_uint8(i2c_device, CMD_STATUS_BYTE);
 }
 
-void status_word()
+reg_status_word status_word()
 {
+    return (reg_status_word) i2c_device_read_uint16(i2c_device,
+                                                    CMD_STATUS_WORD);
 }
 
 void status_iout()

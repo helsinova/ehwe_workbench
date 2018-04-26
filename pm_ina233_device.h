@@ -46,7 +46,7 @@
 #define CMD_PIN_OP_WARN_LIMIT   0x6B    /* Retrieves or stores t0xe output
                                            overpower warn limit t0xres0xold R/W 2
                                            0x7FF8 */
-#define CMD_STATUS BYTE         0x78    /* Retrieves information about t0xe
+#define CMD_STATUS_BYTE         0x78    /* Retrieves information about t0xe
                                            device operating status R 1 0x00 */
 #define CMD_STATUS_WORD         0x79    /* Retrieves information about t0xe
                                            device operating status R 2 0x1000 */
