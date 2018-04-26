@@ -87,8 +87,13 @@ int main(int argc, char **argv)
         (stderr,
          "TI manufaturer ID=[0x%04X], TI model=[0x%04X], TI revision=[0x%04X]\n",
          ti_mfr_id(), ti_mfr_revision(), ti_mfr_revision());
-    fprintf(stderr, "Status=[0x%02X], Status Word=[0x%04X]\n", status().raw_val,
-            status_word().raw_val);
+    fprintf(stderr, "Status=[0x%02X], Status Word=[0x%04X]\n",
+            status_byte().raw_val, status_word().raw_val);
+
+    fprintf(stderr,
+            "Statuses specific: iout=[0x%02X], input=[0x%02X], cml=[0x%02X], mfr_specific=[0x%02X] \n",
+            get_status_iout().raw_val, get_status_input().raw_val,
+            get_status_cml().raw_val, get_status_mfr_specific().raw_val);
 
     adc_config = get_mfr_adc_config();
     fprintf(stderr, "ADC config=[0x%04X]\n", adc_config.raw_val);

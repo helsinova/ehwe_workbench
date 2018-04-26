@@ -81,6 +81,7 @@ void pin_op_warn_limit()
 {
 }
 
+/* Overview status */
 reg_status_byte status_byte()
 {
     return (reg_status_byte) i2c_device_read_uint8(i2c_device, CMD_STATUS_BYTE);
@@ -92,20 +93,47 @@ reg_status_word status_word()
                                                     CMD_STATUS_WORD);
 }
 
-void status_iout()
+/* Specific statuses: set/get - use set_X::bit to clear */
+reg_status_iout get_status_iout()
 {
+    return (reg_status_iout) i2c_device_read_uint8(i2c_device, CMD_STATUS_IOUT);
 }
 
-void status_input()
+reg_status_input get_status_input()
 {
+    return (reg_status_input) i2c_device_read_uint8(i2c_device,
+                                                    CMD_STATUS_INPUT);
 }
 
-void status_cml()
+reg_status_cml get_status_cml()
 {
+    return (reg_status_cml) i2c_device_read_uint8(i2c_device, CMD_STATUS_CML);
 }
 
-void status_mfr_specific()
+reg_status_mfr_specific get_status_mfr_specific()
 {
+    return (reg_status_mfr_specific) i2c_device_read_uint8(i2c_device,
+                                                           CMD_STATUS_MFR_SPECIFIC);
+}
+
+void set_status_iout(reg_status_iout status)
+{
+    i2c_device_write_uint8(i2c_device, CMD_STATUS_IOUT, status.raw_val);
+}
+
+void set_status_input(reg_status_input status)
+{
+    i2c_device_write_uint8(i2c_device, CMD_STATUS_INPUT, status.raw_val);
+}
+
+void set_status_cml(reg_status_input status)
+{
+    i2c_device_write_uint8(i2c_device, CMD_STATUS_CML, status.raw_val);
+}
+
+void set_status_mfr_specific(reg_status_mfr_specific status)
+{
+    i2c_device_write_uint8(i2c_device, CMD_STATUS_MFR_SPECIFIC, status.raw_val);
 }
 
 /* Note: Block read */
