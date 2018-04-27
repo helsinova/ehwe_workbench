@@ -117,6 +117,11 @@ int main(int argc, char **argv)
 
     fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
 
+//#ifdef NEVER
+    clear_faults();
+    restore_default_all();
+//#endif
+
     set_mfr_calibration(2550);  /* Adjust accordingly in pm_ina233_device.h */
     fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
 
@@ -136,6 +141,8 @@ int main(int argc, char **argv)
 
 //#ifdef NEVER
     adc_config.AVG = 6;         /* val=0-7 => (val << 2) + 1; */
+    adc_config.VSHCT=7;
+    adc_config.VBUSCT=7;
     set_mfr_adc_config(adc_config);
 
     adc_config = get_mfr_adc_config();
