@@ -62,24 +62,24 @@ typedef union {
 
 typedef union {
     struct {
-        uint8_t VOUT:1;         /* [NS] 0 */
-        uint8_t IOUT_POUT:1;    /* An output current or power W.H.O. 0 */
-        uint8_t INPUT:1;        /* An input voltage, current, or power W.H.O. 0
+        uint16_t VOUT:1;         /* [NS] 0 */
+        uint16_t IOUT_POUT:1;    /* An output current or power W.H.O. 0 */
+        uint16_t INPUT:1;        /* An input voltage, current, or power W.H.O. 0
                                  */
-        uint8_t MFR:1;          /* A manufacturer-specific fault or W.H.O. 1 */
-        uint8_t POWER_GOOD:1;   /* [NS] 0 */
-        uint8_t FANS:1;         /* [NS] 0 */
-        uint8_t OTHER:1;        /* [NS] 0 */
-        uint8_t UNKNOWN:1;      /* [NS] 0 */
+        uint16_t MFR:1;          /* A manufacturer-specific fault or W.H.O. 1 */
+        uint16_t POWER_GOOD:1;   /* [NS] 0 */
+        uint16_t FANS:1;         /* [NS] 0 */
+        uint16_t OTHER:1;        /* [NS] 0 */
+        uint16_t UNKNOWN:1;      /* [NS] 0 */
 
-        uint8_t BUSY:1;         /* [NS] 0 */
-        uint8_t OFF:1;          /* [NS] 0 */
-        uint8_t VOUT_OC:1;      /* [NS] 0 */
-        uint8_t IOUT_OC:1;      /* [NS] 0 */
-        uint8_t VIN_UV:1;       /* [NS] 0 */
-        uint8_t TEMPERATURE:1;  /* [NS] 0 */
-        uint8_t CML:1;          /* A communication fault H.O. 0 */
-        uint8_t NONE_OF_THE_ABOVE:1;    /* A fault or warning not listed in
+        uint16_t BUSY:1;         /* [NS] 0 */
+        uint16_t OFF:1;          /* [NS] 0 */
+        uint16_t VOUT_OC:1;      /* [NS] 0 */
+        uint16_t IOUT_OC:1;      /* [NS] 0 */
+        uint16_t VIN_UV:1;       /* [NS] 0 */
+        uint16_t TEMPERATURE:1;  /* [NS] 0 */
+        uint16_t CML:1;          /* A communication fault H.O. 0 */
+        uint16_t NONE_OF_THE_ABOVE:1;    /* A fault or warning not listed in
                                            bits[7:1] H.O. */
     } __attribute__ ((packed));
     uint16_t raw_val;
@@ -183,23 +183,23 @@ typedef union {
 
 typedef union {
     struct {
-        uint8_t NONE_OF_THE_ABOVE:1;
-        uint8_t CML:1;
-        uint8_t TEMPERATURE:1;
-        uint8_t VIN_UV:1;
-        uint8_t IOUT_OC:1;
-        uint8_t VOUT_OC:1;
-        uint8_t OFF:1;
-        uint8_t BUSY:1;
+        uint16_t NONE_OF_THE_ABOVE:1;
+        uint16_t CML:1;
+        uint16_t TEMPERATURE:1;
+        uint16_t VIN_UV:1;
+        uint16_t IOUT_OC:1;
+        uint16_t VOUT_OC:1;
+        uint16_t OFF:1;
+        uint16_t BUSY:1;
 
-        uint8_t UNKNOWN:1;
-        uint8_t OTHER:1;
-        uint8_t FANS:1;
-        uint8_t POWER_GOOD:1;
-        uint8_t MFR:1;
-        uint8_t INPUT:1;
-        uint8_t IOUT_POUT:1;
-        uint8_t VOUT:1;
+        uint16_t UNKNOWN:1;
+        uint16_t OTHER:1;
+        uint16_t FANS:1;
+        uint16_t POWER_GOOD:1;
+        uint16_t MFR:1;
+        uint16_t INPUT:1;
+        uint16_t IOUT_POUT:1;
+        uint16_t VOUT:1;
     } __attribute__ ((packed));
     uint16_t raw_val;
     uint8_t barray[2];
