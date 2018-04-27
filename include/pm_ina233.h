@@ -62,24 +62,24 @@ typedef union {
 
 typedef union {
     struct {
-        uint16_t VOUT:1;         /* [NS] 0 */
-        uint16_t IOUT_POUT:1;    /* An output current or power W.H.O. 0 */
-        uint16_t INPUT:1;        /* An input voltage, current, or power W.H.O. 0
+        uint16_t VOUT:1;        /* [NS] 0 */
+        uint16_t IOUT_POUT:1;   /* An output current or power W.H.O. 0 */
+        uint16_t INPUT:1;       /* An input voltage, current, or power W.H.O. 0
                                  */
-        uint16_t MFR:1;          /* A manufacturer-specific fault or W.H.O. 1 */
-        uint16_t POWER_GOOD:1;   /* [NS] 0 */
-        uint16_t FANS:1;         /* [NS] 0 */
-        uint16_t OTHER:1;        /* [NS] 0 */
-        uint16_t UNKNOWN:1;      /* [NS] 0 */
+        uint16_t MFR:1;         /* A manufacturer-specific fault or W.H.O. 1 */
+        uint16_t POWER_GOOD:1;  /* [NS] 0 */
+        uint16_t FANS:1;        /* [NS] 0 */
+        uint16_t OTHER:1;       /* [NS] 0 */
+        uint16_t UNKNOWN:1;     /* [NS] 0 */
 
-        uint16_t BUSY:1;         /* [NS] 0 */
-        uint16_t OFF:1;          /* [NS] 0 */
-        uint16_t VOUT_OC:1;      /* [NS] 0 */
-        uint16_t IOUT_OC:1;      /* [NS] 0 */
-        uint16_t VIN_UV:1;       /* [NS] 0 */
-        uint16_t TEMPERATURE:1;  /* [NS] 0 */
-        uint16_t CML:1;          /* A communication fault H.O. 0 */
-        uint16_t NONE_OF_THE_ABOVE:1;    /* A fault or warning not listed in
+        uint16_t BUSY:1;        /* [NS] 0 */
+        uint16_t OFF:1;         /* [NS] 0 */
+        uint16_t VOUT_OC:1;     /* [NS] 0 */
+        uint16_t IOUT_OC:1;     /* [NS] 0 */
+        uint16_t VIN_UV:1;      /* [NS] 0 */
+        uint16_t TEMPERATURE:1; /* [NS] 0 */
+        uint16_t CML:1;         /* A communication fault H.O. 0 */
+        uint16_t NONE_OF_THE_ABOVE:1;   /* A fault or warning not listed in
                                            bits[7:1] H.O. */
     } __attribute__ ((packed));
     uint16_t raw_val;
@@ -155,10 +155,10 @@ typedef union {
 typedef union {
     struct {
         uint16_t __not_used:4;
-        uint16_t AVG:3;          /* Averaging */
-        uint16_t VBUSCT:3;       /* Bus voltage conversion time */
-        uint16_t VSHCT:3;        /* Shunt voltage conversion time */
-        uint16_t shunt:1;        /* Operation modes (3) */
+        uint16_t AVG:3;         /* Averaging */
+        uint16_t VBUSCT:3;      /* Bus voltage conversion time */
+        uint16_t VSHCT:3;       /* Shunt voltage conversion time */
+        uint16_t shunt:1;       /* Operation modes (3) */
         uint16_t bus:1;
         uint16_t continuous:1;
     } __attribute__ ((packed));
@@ -182,6 +182,47 @@ typedef union {
     } __attribute__ ((packed));
     uint8_t barray[6];
 } reg_read_ein;
+
+/*
+7 EIN_STATUS R/W 0 0 = All values added to the EIN accumulator match the
+setting of EIN_ACCUM 1 = The EIN accumulator encountered a value
+inconsistent with the selected mode of operation. For EIN_ACCUM = 01, a
+negative value of the sign bit of READ_IIN is detected. For EIN_ACCUM =
+10, a positive value of the sign bit of READ_IIN is
+detected. EIN_STATUS is not set when EIN_ACCUM is 00 or 11.
+
+6 Reserved R/W 0 Reserved
+
+5:4 EIN_ACCUM R/W 00 00, 11 = The READ_EIN accumulator sums all values of
+the READ_POUT register. Both negative and currents will increase the
+accumulator. 01 = The READ_EIN only sums positive values of the READ_POUT
+register based on the sign bit of the READ_IIN register; the sample count
+continues to increment for negative values 10 = The READ_EIN only sums
+negative values of the READ_POUT register based on the sign bit of the
+READ_IIN register; the sample count continues to increment for positive
+values
+
+3 I2C_FILT R/W 0 0 = Normal operation 1 = Disables the I2C input filter
+
+2 READ_EIN Autoclear R/W 0 0 = Does not clear the sample count and
+accumulator 1 = Clears the sample count and accumulator after read
+
+1 Alert Behavior R/W 1 0 = Transparent 1 = Latched
+
+0 APOL R/W 0 Alert polarity bit.0 = Normal 1 = Inverted
+*/
+typedef union {
+    struct {
+        uint8_t EIN_STATUS:1;
+        uint8_t __reserved:1;
+        uint8_t EIN_ACCUM:2;
+        uint8_t I2C_FILT:1;
+        uint8_t EIN_AUTOCLEAR:1;
+        uint8_t ALRT_LATCH:1;
+        uint8_t APOL:1;
+    } __attribute__ ((packed));
+    uint8_t raw_val;
+} reg_device_config;
 
 #else
 typedef union {
@@ -309,6 +350,20 @@ typedef union {
     uint8_t barray[6];
 } reg_read_ein;
 
+typedef union {
+    struct {
+        uint8_t APOL:1;
+        uint8_t ALRT_LATCH:1;
+        uint8_t EIN_AUTOCLEAR:1;
+        uint8_t I2C_FILT:1;
+        uint8_t EIN_ACCUM:2;
+        uint8_t __reserved:1;
+        uint8_t EIN_STATUS:1;
+
+    } __attribute__ ((packed));
+    uint8_t raw_val;
+} reg_device_config;
+
 #endif
 
 void clear_faults();
@@ -350,12 +405,22 @@ void set_mfr_adc_config(reg_mfr_adc_config);
 uint16_t mfr_read_vshunt_ADC();
 double mfr_read_vshunt();
 //void mfr_alert_mask();
+
 void set_mfr_calibration(uint16_t cal);
 uint16_t get_mfr_calibration();
-//void mfr_device_config();
+
+reg_device_config get_mfr_device_config();
+void set_mfr_device_config(reg_device_config config);
+
 void clear_ein();
+
 int16_t ti_mfr_id();
 int16_t ti_mfr_model();
 int16_t ti_mfr_revision();
+
+/* Convert functions */
+double adc2voltage(uint16_t);
+double adc2current(uint16_t);
+double adc2power(uint16_t);
 
 #endif

@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include <pm_ina233.h>
 
@@ -45,12 +46,30 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
+double _tv_diff(struct timespec t0, struct timespec t1)
+{
+    double T0, T1;
+
+    T0 = t0.tv_nsec;
+    T0 = T0 / 1E9;
+    T0 = T0 + t0.tv_sec;
+
+    T1 = t1.tv_nsec;
+    T1 = T1 / 1E9;
+    T1 = T1 + t1.tv_sec;
+
+    return T1 - T0;
+}
+
 int main(int argc, char **argv)
 {
     int c, i, x = DEFLT_X;
     char bbuf[32];
     reg_mfr_adc_config adc_config;
-    reg_read_ein ein;
+    //reg_read_ein ein;
+    reg_device_config device_config;
+    struct timespec tpre;
+    struct timespec tnow;
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
@@ -105,6 +124,7 @@ int main(int argc, char **argv)
             read_vin(), read_iin(), read_pin());
     fprintf(stderr, "VIP out: V=%f I=%f P=%f\n",
             read_vout(), read_iout(), read_pout());
+
     adc_config = get_mfr_adc_config();
     fprintf(stderr, "ADC config=[0x%04X]\n", adc_config.raw_val);
     fprintf(stderr, "  AVG=[%d]\n", adc_config.AVG);
@@ -114,8 +134,8 @@ int main(int argc, char **argv)
     fprintf(stderr, "  MODE.bus=[%d]\n", adc_config.bus);
     fprintf(stderr, "  MODE.continuous=[%d]\n", adc_config.continuous);
 
-#ifdef NEVER
-    adc_config.AVG = 3;         /* val=0-7 => (val << 2) + 1; */
+//#ifdef NEVER
+    adc_config.AVG = 6;         /* val=0-7 => (val << 2) + 1; */
     set_mfr_adc_config(adc_config);
 
     adc_config = get_mfr_adc_config();
@@ -126,18 +146,50 @@ int main(int argc, char **argv)
     fprintf(stderr, "  MODE.shunt=[%d]\n", adc_config.shunt);
     fprintf(stderr, "  MODE.bus=[%d]\n", adc_config.bus);
     fprintf(stderr, "  MODE.continuous=[%d]\n", adc_config.continuous);
+//#endif
+
+    device_config = get_mfr_device_config();
+    fprintf(stderr, "Device config=[0x%04X]\n", device_config.raw_val);
+    fprintf(stderr, "  EIN_STATUS=[%d]\n", device_config.EIN_STATUS);
+    fprintf(stderr, "  EIN_ACCUM=[%X]\n", device_config.EIN_ACCUM);
+    fprintf(stderr, "  I2C_FILT=[%d]\n", device_config.I2C_FILT);
+    fprintf(stderr, "  EIN_AUTOCLEAR=[%d]\n", device_config.EIN_AUTOCLEAR);
+    fprintf(stderr, "  ALRT_LATCH=[%d]\n", device_config.ALRT_LATCH);
+    fprintf(stderr, "  APOL=[%d]\n", device_config.APOL);
+
+    device_config.EIN_AUTOCLEAR = 0;
+    device_config.EIN_ACCUM = 0x01;
+    set_mfr_device_config(device_config);
+
+    device_config = get_mfr_device_config();
+    fprintf(stderr, "Device config=[0x%04X]\n", device_config.raw_val);
+    fprintf(stderr, "  EIN_STATUS=[%d]\n", device_config.EIN_STATUS);
+    fprintf(stderr, "  EIN_ACCUM=[%X]\n", device_config.EIN_ACCUM);
+    fprintf(stderr, "  I2C_FILT=[%d]\n", device_config.I2C_FILT);
+    fprintf(stderr, "  EIN_AUTOCLEAR=[%d]\n", device_config.EIN_AUTOCLEAR);
+    fprintf(stderr, "  ALRT_LATCH=[%d]\n", device_config.ALRT_LATCH);
+    fprintf(stderr, "  APOL=[%d]\n", device_config.APOL);
+
+#ifdef NEVER
     clear_faults();
     restore_default_all();
 #endif
 
+    clock_gettime(CLOCK_MONOTONIC, &tpre);
+
     for (i = 0; i < x; i++) {
-        //PRINTF("%f %f %f\n", read_vin(), read_iin(), read_pin());
-        ein = read_ein();
+        clock_gettime(CLOCK_MONOTONIC, &tnow);
+        PRINTF("%9ld.%09lu %f %f %f %f %f %d\n", tnow.tv_sec, tnow.tv_nsec,
+               _tv_diff(tpre, tnow), read_vin(), read_iin(), read_pin(),
+               adc2power(read_ein().power_accumulator), mfr_read_vshunt_ADC());
+#ifdef NEVER
         PRINTF("%04X %02X %02X --", ein.power_accumulator, ein.barray[0],
                ein.barray[1]);
         PRINTF("%02X %06X %02X %02X %02X\n", ein.count.rollover,
                ein.count.sample, ein.count.barray[0], ein.count.barray[1],
                ein.count.barray[3]);
+#endif
+        tpre = tnow;
         FFLUSH(stdout);
         clear_ein();
     }

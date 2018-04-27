@@ -39,7 +39,8 @@
 #define  CURRENT_LSB         (5.12E-3 / (CAL*R_SHUNT))
 #define  POWER_LSB           (CURRENT_LSB * 25.0 / SCAL)
 
-/* Convert internal (ADC) values to SI-units */
+/* Convert internal (ADC) values to SI-units. Bust be in compilation module as
+it contains configurables */
 #define ADC2VOLTAGE( V )  ((  ((double)(int16_t) V )) * VOLTAGE_LSB)
 #define ADC2CURRENT( I )  ((( ((double)(int16_t) I )) * CURRENT_LSB) / SCAL)
 #define ADC2POWER( P )    ((  ((double)(int16_t) P )) * POWER_LSB)
@@ -152,7 +153,7 @@ reg_read_ein read_ein()
 
     /* Somewhat architecture portable */
     i2c_device_read_bytes(i2c_device, CMD_READ_EIN, buf, sizeof(buf));
-    ein.power_accumulator = *((uint16_t*)(&(buf[1])));
+    ein.power_accumulator = *((uint16_t *)(&(buf[1])));
     ein.count.rollover = buf[3];
     ein.barray[5] = buf[6];
     ein.barray[4] = buf[5];
@@ -274,13 +275,21 @@ uint16_t get_mfr_calibration()
     return i2c_device_read_uint16(i2c_device, CMD_MFR_CALIBRATION);
 }
 
-void mfr_device_config()
+reg_device_config get_mfr_device_config()
 {
+    return (reg_device_config) i2c_device_read_uint8(i2c_device,
+                                                     CMD_MFR_DEVICE_CONFIG);
+}
+
+void set_mfr_device_config(reg_device_config config)
+{
+    i2c_device_write_uint8(i2c_device, CMD_MFR_DEVICE_CONFIG, config.raw_val);
 }
 
 void clear_ein()
 {
-    i2c_device_write_bytes(i2c_device, CMD_CLEAR_EIN, (uint8_t[]){0}, 1);
+    //i2c_device_write_bytes(i2c_device, CMD_CLEAR_EIN, (uint8_t[]){0}, 1);
+    i2c_device_write_bytes(i2c_device, CMD_CLEAR_EIN, NULL, 0);
 }
 
 int16_t ti_mfr_id()
@@ -296,4 +305,21 @@ int16_t ti_mfr_model()
 int16_t ti_mfr_revision()
 {
     return i2c_device_read_uint16(i2c_device, CMD_TI_MFR_REVISION);
+}
+
+/* Convert functions - same as macros. Cannot be static const for the same
+reason as the macros */
+double adc2voltage(uint16_t v)
+{
+    return ADC2VOLTAGE(v);
+}
+
+double adc2current(uint16_t i)
+{
+    return ADC2CURRENT(i);
+}
+
+double adc2power(uint16_t p)
+{
+    return ADC2POWER(p);
 }
