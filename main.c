@@ -96,10 +96,9 @@ int main(int argc, char **argv)
             get_status_cml().raw_val, get_status_mfr_specific().raw_val);
 
     fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
-#ifdef NEVER
-    set_mfr_calibration(2);
+
+    set_mfr_calibration(2550); /* Adjust accordingly in pm_ina233_device.h */
     fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
-#endif
 
     fprintf(stderr, "VIP in: V=%f I=%f P=%f\n",
             read_vin(), read_iin(), read_pin());
@@ -114,6 +113,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "  MODE.bus=[%d]\n", adc_config.bus);
     fprintf(stderr, "  MODE.continuous=[%d]\n", adc_config.continuous);
 
+#ifdef NEVER
     adc_config.AVG = 3;         /* val=0-7 => (val << 2) + 1; */
     set_mfr_adc_config(adc_config);
 
@@ -127,9 +127,12 @@ int main(int argc, char **argv)
     fprintf(stderr, "  MODE.continuous=[%d]\n", adc_config.continuous);
     clear_faults();
     restore_default_all();
+#endif
 
     for (i = 0; i < x; i++) {
-        PRINTF("%f %f %f\n", read_vin(), read_iin(), read_pin());
+        PRINTF("%f %f %f -- %04X %f\n", read_vin(), read_iin(), read_pin(),
+               mfr_read_vshunt_ADC(), mfr_read_vshunt());
+        //read_iin();
         FFLUSH(stdout);
     }
 

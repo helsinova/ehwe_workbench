@@ -28,18 +28,21 @@
 
 /* Change the following according to HW-design */
 #define  R_SHUNT             (1.0E-3)
-#define  CAL                 (1.0)
+#define  CAL                 (2555.0)  /* Multiplication factor
+                                         (value of calibration register) */
+#define  SCAL                (32.9)    /* Soft (fine tune) calibration
+                                          Note: Inverse multiplication */
 
 /* Constants and derived constants */
 #define  VOLTAGE_LSB         (1.25E-3)
 #define  VOLTAGE_SHUNT_LSB   (2.5E-6)
 #define  CURRENT_LSB         (5.12E-3 / (CAL*R_SHUNT))
-#define  POWER_LSB           (CURRENT_LSB / 25)
+#define  POWER_LSB           (CURRENT_LSB * 25.0 / SCAL)
 
 /* Convert internal (ADC) values to SI-units */
-#define ADC2VOLTAGE( V ) 	(((int16_t) V ) * VOLTAGE_LSB)
-#define ADC2CURRENT( I ) 	(((int16_t) I ) * CURRENT_LSB)
-#define ADC2POWER( P ) 		(((int16_t) P ) * POWER_LSB)
+#define ADC2VOLTAGE( V )  ((  ((double)(int16_t) V )) * VOLTAGE_LSB)
+#define ADC2CURRENT( I )  ((( ((double)(int16_t) I )) * CURRENT_LSB) / SCAL)
+#define ADC2POWER( P )    ((  ((double)(int16_t) P )) * POWER_LSB)
 
 i2c_device_hndl i2c_device = NULL;
 
@@ -176,6 +179,7 @@ double read_vout()
 
 double read_iin()
 {
+
     return ADC2CURRENT(i2c_device_read_uint16(i2c_device, CMD_READ_IIN));
 }
 
@@ -231,8 +235,15 @@ void set_mfr_adc_config(reg_mfr_adc_config config)
     i2c_device_write_uint16(i2c_device, CMD_MFR_ADC_CONFIG, config.raw_val);
 }
 
-void mfr_read_vshunt()
+/* Return VShunt ADC-value*/
+uint16_t mfr_read_vshunt_ADC()
 {
+    return i2c_device_read_uint16(i2c_device, CMD_MFR_READ_VSHUNT);
+}
+
+double mfr_read_vshunt()
+{
+    return ADC2VOLTAGE(i2c_device_read_uint16(i2c_device, CMD_MFR_READ_VSHUNT));
 }
 
 void mfr_alert_mask()
