@@ -154,17 +154,34 @@ typedef union {
 
 typedef union {
     struct {
-        uint8_t __not_used:4;
-        uint8_t AVG:3;          /* Averaging */
-        uint8_t VBUSCT:3;       /* Bus voltage conversion time */
-        uint8_t VSHCT:3;        /* Shunt voltage conversion time */
-        uint8_t shunt:1;        /* Operation modes (3) */
-        uint8_t bus:1;
-        uint8_t continuous:1;
+        uint16_t __not_used:4;
+        uint16_t AVG:3;          /* Averaging */
+        uint16_t VBUSCT:3;       /* Bus voltage conversion time */
+        uint16_t VSHCT:3;        /* Shunt voltage conversion time */
+        uint16_t shunt:1;        /* Operation modes (3) */
+        uint16_t bus:1;
+        uint16_t continuous:1;
     } __attribute__ ((packed));
     uint16_t raw_val;
     uint8_t barray[2];
 } reg_mfr_adc_config;
+
+typedef union {
+    struct {
+        uint32_t sample:24;
+        uint32_t rollover:8;
+    } __attribute__ ((packed));
+    uint32_t raw_val;
+    uint8_t barray[4];
+} reg_sample_count;
+
+typedef union {
+    struct {
+        reg_sample_count count;
+        uint16_t power_accumulator;
+    } __attribute__ ((packed));
+    uint8_t barray[6];
+} reg_read_ein;
 
 #else
 typedef union {
@@ -263,17 +280,34 @@ typedef union {
 
 typedef union {
     struct {
-        uint8_t continuous:1;
-        uint8_t bus:1;
-        uint8_t shunt:1;
-        uint8_t VSHCT:3;
-        uint8_t VBUSCT:3;
-        uint8_t AVG:3;
-        uint8_t __not_used:4;
+        uint16_t continuous:1;
+        uint16_t bus:1;
+        uint16_t shunt:1;
+        uint16_t VSHCT:3;
+        uint16_t VBUSCT:3;
+        uint16_t AVG:3;
+        uint16_t __not_used:4;
     } __attribute__ ((packed));
     uint16_t raw_val;
     uint8_t barray[2];
 } reg_mfr_adc_config;
+
+typedef union {
+    struct {
+        uint32_t rollover:8;
+        uint32_t sample:24;
+    } __attribute__ ((packed));
+    uint32_t raw_val;
+    uint8_t barray[4];
+} reg_sample_count;
+
+typedef union {
+    struct {
+        uint16_t power_accumulator;
+        reg_sample_count count;
+    } __attribute__ ((packed));
+    uint8_t barray[6];
+} reg_read_ein;
 
 #endif
 
@@ -306,10 +340,10 @@ double read_vout();
 double read_iout();
 double read_pout();
 
-//void read_ein();
+reg_read_ein read_ein();
 
 uint16_t mfr_id();
-void mfr_model(char model[6]);
+char *mfr_model(char model[6]);
 uint8_t mfr_revision();
 reg_mfr_adc_config get_mfr_adc_config();
 void set_mfr_adc_config(reg_mfr_adc_config);
@@ -319,7 +353,7 @@ double mfr_read_vshunt();
 void set_mfr_calibration(uint16_t cal);
 uint16_t get_mfr_calibration();
 //void mfr_device_config();
-//void clear_ein();
+void clear_ein();
 int16_t ti_mfr_id();
 int16_t ti_mfr_model();
 int16_t ti_mfr_revision();

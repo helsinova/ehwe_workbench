@@ -28,10 +28,10 @@
 
 /* Change the following according to HW-design */
 #define  R_SHUNT             (1.0E-3)
-#define  CAL                 (2555.0)  /* Multiplication factor
-                                         (value of calibration register) */
-#define  SCAL                (32.9)    /* Soft (fine tune) calibration
-                                          Note: Inverse multiplication */
+#define  CAL                 (2555.0)   /* Multiplication factor
+                                           (value of calibration register) */
+#define  SCAL                (32.9) /* Soft (fine tune) calibration
+                                       Note: Inverse multiplication */
 
 /* Constants and derived constants */
 #define  VOLTAGE_LSB         (1.25E-3)
@@ -145,8 +145,20 @@ void set_status_mfr_specific(reg_status_mfr_specific status)
 }
 
 /* Note: Block read */
-void read_ein()
+reg_read_ein read_ein()
 {
+    uint8_t buf[7] = { 0 };
+    reg_read_ein ein;
+
+    /* Somewhat architecture portable */
+    i2c_device_read_bytes(i2c_device, CMD_READ_EIN, buf, sizeof(buf));
+    ein.power_accumulator = *((uint16_t*)(&(buf[1])));
+    ein.count.rollover = buf[3];
+    ein.barray[5] = buf[6];
+    ein.barray[4] = buf[5];
+    ein.barray[3] = buf[4];
+
+    return ein;
 }
 
 double read_vin()
@@ -209,12 +221,14 @@ uint16_t mfr_id()
 }
 
 /* Note: Block read */
-void mfr_model(char model[6])
+char *mfr_model(char model[6])
 {
     uint8_t buf[7] = { 0 };
 
     i2c_device_read_bytes(i2c_device, CMD_MFR_MODEL, buf, sizeof(buf));
     memcpy(model, &buf[1], 6);
+
+    return model;
 }
 
 uint8_t mfr_revision()
@@ -266,6 +280,7 @@ void mfr_device_config()
 
 void clear_ein()
 {
+    i2c_device_write_bytes(i2c_device, CMD_CLEAR_EIN, (uint8_t[]){0}, 1);
 }
 
 int16_t ti_mfr_id()

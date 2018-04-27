@@ -50,6 +50,7 @@ int main(int argc, char **argv)
     int c, i, x = DEFLT_X;
     char bbuf[32];
     reg_mfr_adc_config adc_config;
+    reg_read_ein ein;
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
 
     fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
 
-    set_mfr_calibration(2550); /* Adjust accordingly in pm_ina233_device.h */
+    set_mfr_calibration(2550);  /* Adjust accordingly in pm_ina233_device.h */
     fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
 
     fprintf(stderr, "VIP in: V=%f I=%f P=%f\n",
@@ -130,10 +131,15 @@ int main(int argc, char **argv)
 #endif
 
     for (i = 0; i < x; i++) {
-        PRINTF("%f %f %f -- %04X %f\n", read_vin(), read_iin(), read_pin(),
-               mfr_read_vshunt_ADC(), mfr_read_vshunt());
-        //read_iin();
+        //PRINTF("%f %f %f\n", read_vin(), read_iin(), read_pin());
+        ein = read_ein();
+        PRINTF("%04X %02X %02X --", ein.power_accumulator, ein.barray[0],
+               ein.barray[1]);
+        PRINTF("%02X %06X %02X %02X %02X\n", ein.count.rollover,
+               ein.count.sample, ein.count.barray[0], ein.count.barray[1],
+               ein.count.barray[3]);
         FFLUSH(stdout);
+        clear_ein();
     }
 
     pm_deinit();
