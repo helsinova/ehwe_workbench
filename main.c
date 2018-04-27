@@ -95,11 +95,16 @@ int main(int argc, char **argv)
             get_status_iout().raw_val, get_status_input().raw_val,
             get_status_cml().raw_val, get_status_mfr_specific().raw_val);
 
+    fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
+#ifdef NEVER
+    set_mfr_calibration(2);
+    fprintf(stderr, "CAL value: [%d]\n", get_mfr_calibration());
+#endif
+
     fprintf(stderr, "VIP in: V=%f I=%f P=%f\n",
             read_vin(), read_iin(), read_pin());
     fprintf(stderr, "VIP out: V=%f I=%f P=%f\n",
             read_vout(), read_iout(), read_pout());
-
     adc_config = get_mfr_adc_config();
     fprintf(stderr, "ADC config=[0x%04X]\n", adc_config.raw_val);
     fprintf(stderr, "  AVG=[%d]\n", adc_config.AVG);

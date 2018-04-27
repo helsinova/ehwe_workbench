@@ -239,8 +239,14 @@ void mfr_alert_mask()
 {
 }
 
-void mfr_calibration()
+void set_mfr_calibration(uint16_t cal)
 {
+    i2c_device_write_uint16(i2c_device, CMD_MFR_CALIBRATION, cal);
+}
+
+uint16_t get_mfr_calibration()
+{
+    return i2c_device_read_uint16(i2c_device, CMD_MFR_CALIBRATION);
 }
 
 void mfr_device_config()
