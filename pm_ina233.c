@@ -216,7 +216,7 @@ uint16_t mfr_id()
 {
     uint8_t buf[3] = { 0 };
 
-    i2c_device_read_bytes(i2c_device, CMD_MFR_MODEL, buf, sizeof(buf));
+    i2c_device_read_bytes(i2c_device, CMD_MFR_ID, buf, sizeof(buf));
 
     return *((uint16_t *)(&buf[1]));
 }
@@ -232,9 +232,9 @@ char *mfr_model(char model[6])
     return model;
 }
 
-uint8_t mfr_revision()
+uint16_t mfr_revision()
 {
-    return i2c_device_read_uint8(i2c_device, CMD_MFR_REVISION);
+    return i2c_device_read_uint16(i2c_device, CMD_MFR_REVISION);
 }
 
 reg_mfr_adc_config get_mfr_adc_config()

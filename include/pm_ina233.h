@@ -399,7 +399,7 @@ reg_read_ein read_ein();
 
 uint16_t mfr_id();
 char *mfr_model(char model[6]);
-uint8_t mfr_revision();
+uint16_t mfr_revision();
 reg_mfr_adc_config get_mfr_adc_config();
 void set_mfr_adc_config(reg_mfr_adc_config);
 uint16_t mfr_read_vshunt_ADC();
