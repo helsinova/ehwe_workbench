@@ -27,6 +27,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <ehwe_i2c_device.h>
+#include <ehwe.h>
 
 #ifdef EHWE
 #include "embedded_config.h"
@@ -43,9 +45,15 @@
 #define FFLUSH(...) ((void)(0))
 #endif
 
+/* Device address (7-bit) */
+#define PI3HDX414_ADDR 0x5F
+struct device;
+
 int main(int argc, char **argv)
 {
     int c, i, x = DEFLT_X;
+    uint8_t buf[8] = { 0 };
+    i2c_device_hndl i2c_device = NULL;
 
     opterr = 0;
     while ((c = getopt(argc, argv, "x:")) != -1) {
@@ -72,11 +80,36 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
+    i2c_device = i2c_device_open(I2C1, PI3HDX414_ADDR);
+    i2c_write(i2c_device_bus(i2c_device),
+              i2c_device_addr(i2c_device), (uint8_t[]) {
+              1, 2, 3, 4, 5, 6, 7, 8}, 8, 1);
 
     for (i = 0; i < x; i++) {
-        PRINTF("Hello world!\n");
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 0));
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 1));
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 2));
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 3));
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 4));
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 5));
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 6));
+        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 7));
+        PRINTF("\n");
+        i2c_read(i2c_device_bus(i2c_device),
+                 i2c_device_addr(i2c_device), buf, sizeof(buf));
+        PRINTF("%02X ", buf[0]);
+        PRINTF("%02X ", buf[1]);
+        PRINTF("%02X ", buf[2]);
+        PRINTF("%02X ", buf[3]);
+        PRINTF("%02X ", buf[4]);
+        PRINTF("%02X ", buf[5]);
+        PRINTF("%02X ", buf[6]);
+        PRINTF("%02X ", buf[7]);
+        PRINTF("\n");
         FFLUSH(stdout);
     }
+
+    i2c_device_close(i2c_device);
 
     return 0;
 }
