@@ -41,5 +41,8 @@ cmake_install.cmake
 Makefile
 embedded_config.h
 
+# Runtime config (ehwe.sh)
+.device
+
 #Final binary
 #(TBD or not applicable)
