@@ -1,5 +1,4 @@
-BQ27441-G1 documentation
+PI3HDX414 documentation
 ========================
 
-* Data-sheet: [bq27441-g1.pdf]()
-* TRM: [sluuac9a.pdf]()
+* TRM: [PI3HDX414.pdf]()

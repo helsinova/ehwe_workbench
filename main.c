@@ -28,8 +28,6 @@
 #include <string.h>
 #include <math.h>
 
-#include <fg_bq27441.h>
-
 #ifdef EHWE
 #include "embedded_config.h"
 #define main embedded_main
@@ -74,15 +72,11 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
-    fuelguage_init();
 
     for (i = 0; i < x; i++) {
-        PRINTF("%f;%f;%f;%f;%f;%f;%f\n", Voltage(), Temperature(),
-               AverageCurrent(), StandbyCurrent(),
-               MaxLoadCurrent(), AveragePower(), InternalTemperature());
+        PRINTF("Hello world!\n");
         FFLUSH(stdout);
     }
 
-    fuelguage_deinit();
     return 0;
 }
