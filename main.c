@@ -49,10 +49,40 @@
 #define PI3HDX414_ADDR 0x5F
 struct device;
 
+void read_print_chunk(i2c_device_hndl i2c_device)
+{
+    uint8_t buf[8] = { 0 };
+
+    i2c_read(i2c_device_bus(i2c_device),
+             i2c_device_addr(i2c_device), buf, sizeof(buf));
+    PRINTF("%02X ", buf[0]);
+    PRINTF("%02X ", buf[1]);
+    PRINTF("%02X ", buf[2]);
+    PRINTF("%02X ", buf[3]);
+    PRINTF("%02X ", buf[4]);
+    PRINTF("%02X ", buf[5]);
+    PRINTF("%02X ", buf[6]);
+    PRINTF("%02X ", buf[7]);
+    PRINTF("\n");
+    FFLUSH(stdout);
+}
+
+void read_print_bybyte(i2c_device_hndl i2c_device)
+{
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 0));
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 1));
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 2));
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 3));
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 4));
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 5));
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 6));
+    PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 7));
+    PRINTF("\n");
+}
+
 int main(int argc, char **argv)
 {
     int c, i, x = DEFLT_X;
-    uint8_t buf[8] = { 0 };
     i2c_device_hndl i2c_device = NULL;
 
     opterr = 0;
@@ -68,8 +98,8 @@ int main(int argc, char **argv)
                 else if (isprint(optopt))
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 else
-                    fprintf(stderr,
-                            "Unknown option character `\\x%x'.\n", optopt);
+                    fprintf(stderr, "Unknown option character `\\x%x'.\n",
+                            optopt);
                 return 1;
             default:
                 abort();
@@ -83,30 +113,15 @@ int main(int argc, char **argv)
     i2c_device = i2c_device_open(I2C1, PI3HDX414_ADDR);
     i2c_write(i2c_device_bus(i2c_device),
               i2c_device_addr(i2c_device), (uint8_t[]) {
-              1, 2, 3, 4, 5, 6, 7, 8}, 8, 1);
+              0x12, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78, 0x89
+              }
+              , 8, 1);
 
     for (i = 0; i < x; i++) {
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 0));
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 1));
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 2));
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 3));
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 4));
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 5));
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 6));
-        PRINTF("%02X ", i2c_device_read_uint8(i2c_device, 7));
-        PRINTF("\n");
-        i2c_read(i2c_device_bus(i2c_device),
-                 i2c_device_addr(i2c_device), buf, sizeof(buf));
-        PRINTF("%02X ", buf[0]);
-        PRINTF("%02X ", buf[1]);
-        PRINTF("%02X ", buf[2]);
-        PRINTF("%02X ", buf[3]);
-        PRINTF("%02X ", buf[4]);
-        PRINTF("%02X ", buf[5]);
-        PRINTF("%02X ", buf[6]);
-        PRINTF("%02X ", buf[7]);
-        PRINTF("\n");
-        FFLUSH(stdout);
+        read_print_chunk(i2c_device);
+        read_print_chunk(i2c_device);
+        read_print_bybyte(i2c_device);
+        read_print_bybyte(i2c_device);
     }
 
     i2c_device_close(i2c_device);
