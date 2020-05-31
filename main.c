@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c  fuel-gauge  BQ27441
+ * Test program: i2c PI3HDX414 HDMI splitter
  */
 
 #include <ctype.h>
