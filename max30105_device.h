@@ -1,7 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2015 by Michael Ambrus                                  *
- *   ambrmi09@gmail.com                                                    *
- *   Copyright (C) 2018 by Michael Ambrus                                  *
+ *   Copyright (C) 2020 by Michael Ambrus                                  *
  *   michael@helsinova.se                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -19,31 +17,20 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef fg_bq27441_h
-#define fg_bq27441_h
+#ifndef max30105_device_h
+#define max30105_device_h
 
-void fuelguage_init(void);
-void fuelguage_deinit(void);
+/* Device address (7-bit) */
+#define MAX30105_ADDR 0x57
 
-//void Control();
+void device_init(void);
+void device_deinit(void);
 float Temperature();
-float Voltage();
-//void Flags();
-//void NominalAvailableCapacity();
-//void FullAvailableCapacity();
-//void RemainingCapacity();
-//void FullChargeCapacity();
-float AverageCurrent();
-float StandbyCurrent();
-float MaxLoadCurrent();
-float AveragePower();
-//void StateOfCharge();
-float InternalTemperature();
-//void StateOfHealth();
-//void RemainingCapacityUnfiltered();
-//void RemainingCapacityFiltered();
-//void FullChargeCapacityUnfiltered();
-//void FullChargeCapacityFiltered();
-//void StateOfChargeUnfiltered();
+
+/*
+ * Registers
+ */
+#define TEMP         			0x1F    /* Temperature 10 bit ADC */
+#define TEMP_CONF         		0x21    /* Die temerature config */
 
 #endif

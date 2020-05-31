@@ -1,5 +1,10 @@
-BQ27441-G1 documentation
-========================
+MAX30105 - Particle sensor and oximeter sensor (i2c)
+====================================================
 
-* Data-sheet: [bq27441-g1.pdf]()
-* TRM: [sluuac9a.pdf]()
+## In this folder:
+
+* [Breakout schematic](MAX30105_Breakout_Schematic_V10.pdf)
+* [MAX03105 TRM](MAX30105_3.pdf)
+
+## External links
+* [Sparkfun "Hookup Guide"](https://learn.sparkfun.com/tutorials/max30105-particle-and-pulse-ox-sensor-hookup-guide)

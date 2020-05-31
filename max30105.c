@@ -23,105 +23,30 @@
 #include <stddef.h>
 
 #include <ehwe_i2c_device.h>
-#include <fg_bq27441.h>
-#include "fg_bq27441_device.h"
+#include "max30105_device.h"
+#include <assert.h>
+#include <stdint.h>
+#include <unistd.h>
 
 i2c_device_hndl i2c_device = NULL;
 
-void fuelguage_init(void)
+void device_init(void)
 {
-    i2c_device = i2c_device_open(I2C1, BQ27441_ADDR);
+    i2c_device = i2c_device_open(I2C1, MAX30105_ADDR);
 }
 
-void fuelguage_deinit(void)
+void device_deinit(void)
 {
+    assert(i2c_device);
     i2c_device_close(i2c_device);
-}
-
-void Control()
-{
 }
 
 float Temperature()
 {
-    return (i2c_device_read_uint16(i2c_device, COMMAND_TEMP) / 10.0) - 273.15;
-}
+    uint16_t ttemp;
 
-float Voltage()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_VOLTAGE) / 1000.0;
-}
-
-void Flags()
-{
-}
-
-void NominalAvailableCapacity()
-{
-}
-
-void FullAvailableCapacity()
-{
-}
-
-void RemainingCapacity()
-{
-}
-
-void FullChargeCapacity()
-{
-}
-
-float AverageCurrent()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_AVG_CURRENT) / 1000.0;
-}
-
-float StandbyCurrent()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_STDBY_CURRENT) / 1000.0;
-}
-
-float MaxLoadCurrent()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_MAX_CURRENT) / 1000.0;
-}
-
-float AveragePower()
-{
-    return i2c_device_read_uint16(i2c_device, COMMAND_AVG_POWER) / 1000.0;
-}
-
-void StateOfCharge()
-{
-}
-
-float InternalTemperature()
-{
-    return (i2c_device_read_uint16(i2c_device, COMMAND_INT_TEMP) / 10.0) -
-        273.15;
-}
-
-void StateOfHealth()
-{
-}
-
-void RemainingCapacityUnfiltered()
-{
-}
-
-void RemainingCapacityFiltered()
-{
-}
-
-void FullChargeCapacityUnfiltered()
-{
-}
-
-void FullChargeCapacityFiltered()
-{
-}
-
-void StateOfChargeUnfiltered()
-{
+    i2c_device_write_uint8(i2c_device, TEMP_CONF, 0x01);
+    sleep(1);
+    ttemp = i2c_device_read_uint16(i2c_device, TEMP);
+    return (ttemp << 4);
 }

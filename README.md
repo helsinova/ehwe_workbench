@@ -1,54 +1,67 @@
-BQ27441 - Fuel gauge (i2c)
-==========================
+MAX30105 - Particle sensor and oximeter sensor (i2c)
+====================================================
 
 This is a reference workbench for `ehwe`
-([project link](https://github.com/helsinova/ehwe))
-
-*BIG FAT NOTE:* BQ27441 utilizes i2c clock-streching which Bus Pirate
-doesn't handle. A work-around is to run the clock at very low speed. There's
-however no guarantee that the interface will work.
-
+([project link](https://github.3)
 
 ## How to use this git
 
-First, git-clone ``EHWE`` somewhere. Make sure you got all submodules by
-reading it's ``README.md``.
+See this document in master-branch
 
-The following assumes you have a fresh newly created git repository which
-is empty. I.e. in essence the following:
 
-```bash
-mkdir newproject
-cd newproject
-git init
-git commit --allow-empty -m"Initial commit"
+## Bus-pirate session
+
+### Read temperture
+
+```
+m
+1. HiZ
+2. 1-WIRE
+3. UART
+4. I2C
+5. SPI
+6. 2WIRE
+7. 3WIRE
+8. LCD
+9. DIO
+x. exit(without change)
+
+(1)>4
+Set speed:
+ 1. ~5KHz
+ 2. ~50KHz
+ 3. ~100KHz
+ 4. ~400KHz
+
+(1)>4
+Ready
+I2C>W
+Power supplies ON
+I2C>A
+AUX HIGH
+I2C>P
+Pull-up resistors ON
+I2C>(1)
+Searching I2C address space. Found devices at:
+0xAE(0x57 W) 0xAF(0x57 R)
+
+I2C>[0xAE 0x21 0x01]
+I2C START BIT
+WRITE: 0xAE ACK
+WRITE: 0x21 ACK
+WRITE: 0x01 ACK
+I2C STOP BIT
+I2C>[0xAE 0x1F [0xAF r:2]
+I2C START BIT
+WRITE: 0xAE ACK
+WRITE: 0x1F ACK
+I2C START BIT
+WRITE: 0xAF ACK
+READ: 0x1A  ACK 0x07
+NACK
+I2C STOP BIT
+I2C>
 ```
 
-Lets now allocate the path of this directory for the sake of exemplification
-later on (you can off course upload to a server and use that as a origin
-instead):
 
-```bash
-REMOTE_REPO=$(pwd)
-```
-
-* Copy & paste **this project** into a newly created .git project. I.e.
-  all but the .git directory. *Hint:* Copy in two steps. 
-	1. Into a temporary directory. In this directory you remove the .git/
-	   sub-directory. Intermediate directory is now not a git-repo anymore.
-	2. Copy everything from the intermediate directory into your newly prepared
-	   git-directory.
-* Add & commit everything in your new workbench. Possibly rename the
-  source-files and/or add more first.
-* Adapt EHWE to use your new workbench instead as follows:
-
-Lets assume ``$EHWE`` contains the path to *ehwe*
-
-```bash
-cd $EHWE
-git submodule deinit src/embedded
-git submodule add $REMOTE_REPO src/embedded
-git submodule init
-git submodule update
-```
 

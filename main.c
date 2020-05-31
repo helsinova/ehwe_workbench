@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 /*
- * Test program: i2c  fuel-gauge  BQ27441
+ * Test program: i2c  oximeter/particle sensor MAX30105
  */
 
 #include <ctype.h>
@@ -28,7 +28,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <fg_bq27441.h>
+#include "max30105_device.h"
 
 #ifdef EHWE
 #include "embedded_config.h"
@@ -74,15 +74,13 @@ int main(int argc, char **argv)
         //somevar = argv[optind];
     }
 
-    fuelguage_init();
+    device_init();
 
     for (i = 0; i < x; i++) {
-        PRINTF("%f;%f;%f;%f;%f;%f;%f\n", Voltage(), Temperature(),
-               AverageCurrent(), StandbyCurrent(),
-               MaxLoadCurrent(), AveragePower(), InternalTemperature());
+        PRINTF("%f\n", Temperature());
         FFLUSH(stdout);
     }
+    device_deinit();
 
-    fuelguage_deinit();
     return 0;
 }
