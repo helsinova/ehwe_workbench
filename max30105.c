@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 i2c_device_hndl i2c_device = NULL;
 
@@ -43,10 +44,11 @@ void device_deinit(void)
 
 float Temperature()
 {
-    uint16_t ttemp;
+    uint16_t ttemp, frac, temp10;
 
     i2c_device_write_uint8(i2c_device, TEMP_CONF, 0x01);
-    sleep(1);
-    ttemp = i2c_device_read_uint16(i2c_device, TEMP);
-    return (ttemp << 4);
+    ttemp = ntohs(i2c_device_read_uint16(i2c_device, TEMP));
+    frac = (ttemp & 0x00FF) << 4;
+    temp10 = ((ttemp & 0xFF00) | frac) >> 4;
+    return temp10 / 16.0;
 }
